@@ -7,7 +7,7 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="f0c600ca-4ca4-400a-b13e-5f10ea0c0e8c"
+    Name="com.uavassistiveoperation"
     Publisher="CN=Bradl"
     Version="1.0.0.0" />
 
@@ -45,5 +45,10 @@
 
   <Capabilities>
     <Capability Name="internetClient" />
+	  <DeviceCapability Name="serialcommunication">
+		  <Device Id="vidpid:2ca3 001f">
+			  <Function Type="name:serialPort" />
+		  </Device>
+	  </DeviceCapability>
   </Capabilities>
 </Package>

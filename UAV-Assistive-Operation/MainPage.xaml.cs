@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DJI.WindowsSDK;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,49 @@ namespace UAV_Assistive_Operation
         public MainPage()
         {
             this.InitializeComponent();
+            DJISDKManager.Instance.SDKRegistrationStateChanged += Instance_SDKRegistrationEvent;
+
+            DJISDKManager.Instance.RegisterApp("7b980d8aa60b87f6b740fd94");
+        }
+
+        private async void Instance_SDKRegistrationEvent(SDKRegistrationState state, SDKError resultCode)
+        {
+            if (resultCode == SDKError.NO_ERROR)
+            {
+                System.Diagnostics.Debug.WriteLine("Register app successfully.");
+
+                //The product connection state will be updated when it changes here.
+                DJISDKManager.Instance.ComponentManager.GetProductHandler(0).ProductTypeChanged += async delegate (object sender, ProductTypeMsg? value)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                    {
+                        if (value != null && value?.value != ProductType.UNRECOGNIZED)
+                        {
+                            System.Diagnostics.Debug.WriteLine("The Aircraft is connected now.");
+                            //Load/display pages according to the aircarft connection state here.
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("The Aircraft is disconnected now.");
+                            //Hide pages according to the aircraft connection state here, or show connection tips to the users.
+
+                        }
+                    });
+                };
+
+                //If you want to get the latest product connection state manually, you can use the following code.
+                var productType = (await DJISDKManager.Instance.ComponentManager.GetProductHandler(0).GetProductTypeAsync()).value;
+                if (productType != null && productType?.value != ProductType.UNRECOGNIZED)
+                {
+                    System.Diagnostics.Debug.WriteLine("The Aircarft is connected now.");
+                    //Load/display your pages according to the aircraft connection state here.
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Resgister SDK failed, the error is: ");
+                System.Diagnostics.Debug.WriteLine(resultCode.ToString());
+            }
         }
     }
 }
