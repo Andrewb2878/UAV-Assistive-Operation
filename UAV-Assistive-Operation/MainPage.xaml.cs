@@ -114,18 +114,50 @@ namespace UAV_Assistive_Operation
             }
         }
 
-        private void Instance_RawControllerAdded(object sender, RawGameController controller)
+        private async void Instance_RawControllerAdded(object sender, RawGameController controller)
         {
             _rawGameController = controller;
             System.Diagnostics.Debug.WriteLine("Raw controller now connected.");
+
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    ControlNameTextBlock.Text = "Controller connected";
+                    ControlButtonCountTextBlock.Text += _rawGameController.ButtonCount.ToString();
+                    ControlSwitchCountTextBlock.Text += _rawGameController.SwitchCount.ToString();
+                    ControlAxisCountTextBlock.Text += _rawGameController.AxisCount.ToString();
+                    
+                    ControlButtonCountTextBlock.Visibility = Visibility.Visible;
+                    ControlSwitchCountTextBlock.Visibility = Visibility.Visible;
+                    ControlAxisCountTextBlock.Visibility = Visibility.Visible;
+
+                    ControlLeftAxisXTextBlock.Visibility = Visibility.Visible;
+                    ControlLeftAxisYTextBlock.Visibility = Visibility.Visible;
+                    ControlRightAxisXTextBlock.Visibility = Visibility.Visible;
+                    ControlRightAxisYTextBlock.Visibility = Visibility.Visible;
+                });
+            
         }
 
-        private void Instance_RawControllerRemoved(object sender, RawGameController controller)
+        private async void Instance_RawControllerRemoved(object sender, RawGameController controller)
         {
             if (_rawGameController == controller)
             {
                 _rawGameController = null;
                 System.Diagnostics.Debug.WriteLine("Raw controller now disconnected.");
+
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    ControlNameTextBlock.Text = "Controller disconnected";
+
+                    ControlButtonCountTextBlock.Visibility = Visibility.Collapsed;
+                    ControlSwitchCountTextBlock.Visibility = Visibility.Collapsed;
+                    ControlAxisCountTextBlock.Visibility = Visibility.Collapsed;
+
+                    ControlLeftAxisXTextBlock.Visibility = Visibility.Collapsed;
+                    ControlLeftAxisYTextBlock.Visibility = Visibility.Collapsed;
+                    ControlRightAxisXTextBlock.Visibility = Visibility.Collapsed;
+                    ControlRightAxisYTextBlock.Visibility = Visibility.Collapsed;
+                });
             }
         }
 
@@ -145,6 +177,12 @@ namespace UAV_Assistive_Operation
             double leftY = reading.LeftThumbstickY;
             double rightX = reading.RightThumbstickX;
             double rightY = reading.RightThumbstickY;
+
+            //Temp to show joystick movements
+            ControlLeftAxisXTextBlock.Text = $"Axis LeftX: {leftX:F2}";
+            ControlLeftAxisYTextBlock.Text = $"Axis LeftY: {leftY:F2}";
+            ControlRightAxisXTextBlock.Text = $"Axis RightX: {rightX:F2}";
+            ControlRightAxisYTextBlock.Text = $"Axis LeftY: {rightY:F2}";
 
             //Triggers
             double leftTrigger = reading.LeftTrigger;

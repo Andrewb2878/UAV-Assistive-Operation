@@ -9,6 +9,14 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
+        <TextBlock x:Name="ControlNameTextBlock" HorizontalAlignment="Left" Margin="50,50,0,0" TextWrapping="Wrap" Text="Controller disconnected" VerticalAlignment="Top" Width="250" Height="28" FontSize="20"/>
+        <TextBlock x:Name="ControlButtonCountTextBlock" HorizontalAlignment="Left" Margin="50,84,0,0" TextWrapping="Wrap" Text="Button Count: " VerticalAlignment="Top" Width="140" Height="25" FontSize="16" Visibility="Collapsed"/>
+        <TextBlock x:Name="ControlSwitchCountTextBlock" HorizontalAlignment="Left" Margin="50,109,0,0" TextWrapping="Wrap" Text="Switch Count: " VerticalAlignment="Top" Width="140" Height="25" FontSize="16" Visibility="Collapsed"/>
+        <TextBlock x:Name="ControlAxisCountTextBlock" HorizontalAlignment="Left" Margin="50,134,0,0" TextWrapping="Wrap" Text="Axis Count: " VerticalAlignment="Top" Width="140" Height="25" FontSize="16" Visibility="Collapsed"/>
+        <TextBlock x:Name="ControlLeftAxisXTextBlock" HorizontalAlignment="Left" Margin="50,184,0,0" TextWrapping="Wrap" Text="Axis LeftX: " VerticalAlignment="Top" Width="140" Height="25" FontSize="16" Visibility="Collapsed"/>
+        <TextBlock x:Name="ControlLeftAxisYTextBlock" HorizontalAlignment="Left" Margin="50,209,0,0" TextWrapping="Wrap" Text="Axis LeftY: " VerticalAlignment="Top" Width="140" Height="25" FontSize="16" Visibility="Collapsed"/>
+        <TextBlock x:Name="ControlRightAxisXTextBlock" HorizontalAlignment="Left" Margin="50,234,0,0" TextWrapping="Wrap" Text="Axis RightX: " VerticalAlignment="Top" Width="140" Height="25" FontSize="16" Visibility="Collapsed"/>
+        <TextBlock x:Name="ControlRightAxisYTextBlock" HorizontalAlignment="Left" Margin="50,259,0,0" TextWrapping="Wrap" Text="Axis RightY: " VerticalAlignment="Top" Width="140" Height="25" FontSize="16" Visibility="Collapsed"/>
 
     </Grid>
 </Page>
