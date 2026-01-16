@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using UAV_Assistive_Operation.Services;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -22,14 +23,16 @@ namespace UAV_Assistive_Operation
     /// </summary>
     sealed partial class App : Application
     {
-        /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
-        /// </summary>
+        public static DJIService DJIService { get; private set; }
+        public static ControllerService ControllerService { get; private set; }
+
         public App()
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+
+            DJIService = new DJIService();
+            ControllerService = new ControllerService();
         }
 
         /// <summary>
@@ -71,6 +74,9 @@ namespace UAV_Assistive_Operation
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+
+            DJIService.Initialize(Window.Current.Dispatcher);
+            ControllerService.Start();
         }
 
         /// <summary>
