@@ -7,33 +7,55 @@ namespace UAV_Assistive_Operation.Services
 {
     public class DJIService
     {
+        private CoreDispatcher _dispatcher;
+
+
+        /// <summary>
+        /// Triggers one time SDK setup
+        /// </summary>
+        /// <param name="dispatcher"></param>
         public void Initialize(CoreDispatcher dispatcher)
         {
-            DJISDKManager.Instance.SDKRegistrationStateChanged += async (state, result) =>
-            {
-                if (result == SDKError.NO_ERROR)
-                {
-                    System.Diagnostics.Debug.WriteLine("Register app successfully.");
+            _dispatcher = dispatcher;
+            RegisterSdk();
+        }
 
-                    //Updating the UAV connection state on changes.
-                    DJISDKManager.Instance.ComponentManager.GetProductHandler(0).ProductTypeChanged += async (sender, value) =>
-                    {
-                        await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                        {
-                            if (value != null && value?.value != ProductType.UNRECOGNIZED)
-                                Debug.WriteLine("The aircraft is now connected.");
-                            else
-                                Debug.WriteLine("The aircraft is now disconnected.");
-                        });
-                    };
-                }
-                else
-                {
-                    Debug.WriteLine($"SDK registration failed: {result}");
-                }
-            };
+        //SDK registration
+        private void RegisterSdk()
+        {
+            DJISDKManager.Instance.SDKRegistrationStateChanged += SdkRegistrationChanged;
             DJISDKManager.Instance.RegisterApp("7b980d8aa60b87f6b740fd94");
-            
+        }
+
+        //Registration results
+        private void SdkRegistrationChanged(SDKRegistrationState state, SDKError result)
+        {
+            if (result == SDKError.NO_ERROR)
+            {
+                System.Diagnostics.Debug.WriteLine("SDK Registered successfully.");
+                SubscribeToProductChanges();
+            }
+            else
+            {
+                Debug.WriteLine($"SDK registration failed: {result}");
+            }
+        }
+
+        //Aircraft connection monitoring
+        private void SubscribeToProductChanges()
+        {
+            DJISDKManager.Instance.ComponentManager.GetProductHandler(0).ProductTypeChanged += ProductTypeChanged;
+        }
+
+        private async void ProductTypeChanged(object sender, ProductTypeMsg? value)
+        {
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                if (value != null && value?.value != ProductType.UNRECOGNIZED)
+                    Debug.WriteLine("The aircraft is now connected.");
+                else
+                    Debug.WriteLine("The aircraft is now disconnected.");
+            });
         }
     }
 }

@@ -10,35 +10,72 @@ namespace UAV_Assistive_Operation.Services
         private RawGameController _rawGameController;
         private DispatcherTimer _inputTimer;
 
-        //Events for other services to subscribe to
+        //Input events for services to subscribe to
         public event Action<GamepadReading> GamepadUpdated;
         public event Action<bool[], GameControllerSwitchPosition[], double[]> RawControllerUpdated;
 
-        //Listening for controllers and input polling
+        //Connection state events for services to subscribe to
+        public event Action<Gamepad> GamepadConnected;
+        public event Action GamepadDisconnected;
+        public event Action<RawGameController> RawControllerConnected;
+        public event Action RawControllerDisconnected;
+
+        /// <summary>
+        /// Subscribes to controller add/remove events
+        /// </summary>
+        public void Initialize()
+        {
+            Gamepad.GamepadAdded += GamepadAdded;
+            Gamepad.GamepadRemoved += GamepadRemoved;
+
+            RawGameController.RawGameControllerAdded += RawControllerAdded;
+            RawGameController.RawGameControllerRemoved += RawControllerRemoved;
+        }
+
+        /// <summary>
+        /// Begins polling input at 50Hz
+        /// </summary>
         public void Start()
         {
-            Gamepad.GamepadAdded += (sender, gamepad) => _gamepad = gamepad;
-            Gamepad.GamepadRemoved += (sender, gamepad) =>
-            {
-                if (_gamepad == gamepad)
-                {
-                    _gamepad = null;
-                }
-            };
-
-            RawGameController.RawGameControllerAdded += (sender, rawController) => _rawGameController = rawController;
-            RawGameController.RawGameControllerRemoved += (sender, rawController) =>
-            {
-                if (_rawGameController == rawController)
-                {
-                    _rawGameController = null;
-                }
-            };
+            if (_inputTimer != null)
+                return;
 
             _inputTimer = new DispatcherTimer();
             _inputTimer.Interval = TimeSpan.FromMilliseconds(20);
             _inputTimer.Tick += Instance_InputUpdate;
             _inputTimer.Start();
+        }
+
+        //Gamepad added/removed
+        private void GamepadAdded(object sender, Gamepad gamepad)
+        {
+            _gamepad = gamepad;
+            GamepadConnected?.Invoke(gamepad);
+        }
+
+        private void GamepadRemoved(object sender, Gamepad gamepad)
+        {
+            if (_gamepad != gamepad)
+                return;
+            
+            _gamepad = null;
+            GamepadDisconnected?.Invoke();
+        }
+
+        //Raw controller added/removed
+        private void RawControllerAdded(object sender, RawGameController controller)
+        {
+            _rawGameController = controller;
+            RawControllerConnected?.Invoke(controller);
+        }
+
+        private void RawControllerRemoved(object sender, RawGameController controller)
+        {
+            if (_rawGameController != controller)
+                return;
+
+            _rawGameController = null;
+            RawControllerDisconnected?.Invoke();
         }
 
         private void Instance_InputUpdate(object sender, object gamepad)

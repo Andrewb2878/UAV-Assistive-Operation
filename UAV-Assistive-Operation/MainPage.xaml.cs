@@ -32,16 +32,29 @@ namespace UAV_Assistive_Operation
         {
             this.InitializeComponent();
 
-            App.ControllerService.GamepadUpdated += OnGamepadInput;
-            App.ControllerService.RawControllerUpdated += OnRawInput;
+            App.ControllerService.GamepadUpdated += GamepadInput;
+            App.ControllerService.RawControllerUpdated += RawInput;
+
+            App.ControllerService.GamepadConnected += GamepadConnected;
+            App.ControllerService.GamepadDisconnected += GamepadDisconnected;
         }
 
-        private void OnGamepadInput(Windows.Gaming.Input.GamepadReading reading)
+        private void GamepadInput(Windows.Gaming.Input.GamepadReading gamepad)
         {
             
         }
 
-        private void OnRawInput(bool[] buttons, GameControllerSwitchPosition[] switches, double[] axes)
+        private void RawInput(bool[] buttons, GameControllerSwitchPosition[] switches, double[] axes)
+        {
+
+        }
+
+        private void GamepadConnected(Gamepad gamepad)
+        {
+
+        }
+
+        private void GamepadDisconnected()
         {
 
         }

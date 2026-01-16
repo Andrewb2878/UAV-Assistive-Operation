@@ -76,6 +76,7 @@ namespace UAV_Assistive_Operation
             }
 
             DJIService.Initialize(Window.Current.Dispatcher);
+            ControllerService.Initialize();
             ControllerService.Start();
         }
 
