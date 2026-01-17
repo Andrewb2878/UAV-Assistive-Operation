@@ -8,6 +8,8 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.ViewManagement;
+using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -31,8 +33,13 @@ namespace UAV_Assistive_Operation
             this.InitializeComponent();
             this.Suspending += OnSuspending;
 
-            DJIService = new DJIService();
+            string djiSdkKey = "7b980d8aa60b87f6b740fd94";
+
+            DJIService = new DJIService(djiSdkKey);
             ControllerService = new ControllerService();
+
+            ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Maximized;
+            
         }
 
         /// <summary>

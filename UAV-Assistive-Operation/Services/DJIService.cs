@@ -8,7 +8,13 @@ namespace UAV_Assistive_Operation.Services
     public class DJIService
     {
         private CoreDispatcher _dispatcher;
+        private readonly string _sdkKey;
 
+
+        public DJIService(string sdkKey)
+        {
+            _sdkKey = sdkKey ?? throw new ArgumentNullException(nameof(sdkKey));
+        }
 
         /// <summary>
         /// Triggers one time SDK setup
@@ -24,7 +30,7 @@ namespace UAV_Assistive_Operation.Services
         private void RegisterSdk()
         {
             DJISDKManager.Instance.SDKRegistrationStateChanged += SdkRegistrationChanged;
-            DJISDKManager.Instance.RegisterApp("7b980d8aa60b87f6b740fd94");
+            DJISDKManager.Instance.RegisterApp(_sdkKey);
         }
 
         //Registration results
