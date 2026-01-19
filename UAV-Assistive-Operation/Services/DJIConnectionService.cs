@@ -5,13 +5,16 @@ using Windows.UI.Core;
 
 namespace UAV_Assistive_Operation.Services
 {
-    public class DJIService
+    public class DJIConnectionService
     {
-        private CoreDispatcher _dispatcher;
         private readonly string _sdkKey;
+        private CoreDispatcher _dispatcher;
 
+        //Airacraft connection/disconnection events for services to subscribe to
+        public event Action AircraftConnected;
+        public event Action AircraftDisconnected;
 
-        public DJIService(string sdkKey)
+        public DJIConnectionService(string sdkKey)
         {
             _sdkKey = sdkKey ?? throw new ArgumentNullException(nameof(sdkKey));
         }
@@ -58,9 +61,15 @@ namespace UAV_Assistive_Operation.Services
             await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 if (value != null && value?.value != ProductType.UNRECOGNIZED)
+                {
                     Debug.WriteLine("The aircraft is now connected.");
+                    AircraftConnected?.Invoke();
+                }
                 else
+                {
                     Debug.WriteLine("The aircraft is now disconnected.");
+                    AircraftDisconnected?.Invoke();
+                }
             });
         }
     }

@@ -124,7 +124,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ControllerService.cs" />
-    <Compile Include="Services\DJIService.cs" />
+    <Compile Include="Services\DJIConnectionService.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

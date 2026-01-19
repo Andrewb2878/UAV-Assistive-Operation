@@ -25,7 +25,7 @@ namespace UAV_Assistive_Operation
     /// </summary>
     sealed partial class App : Application
     {
-        public static DJIService DJIService { get; private set; }
+        public static DJIConnectionService DJIConnectionService { get; private set; }
         public static ControllerService ControllerService { get; private set; }
 
         public App()
@@ -35,7 +35,7 @@ namespace UAV_Assistive_Operation
 
             string djiSdkKey = "7b980d8aa60b87f6b740fd94";
 
-            DJIService = new DJIService(djiSdkKey);
+            DJIConnectionService = new DJIConnectionService(djiSdkKey);
             ControllerService = new ControllerService();
 
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Maximized;
@@ -82,7 +82,8 @@ namespace UAV_Assistive_Operation
                 Window.Current.Activate();
             }
 
-            DJIService.Initialize(Window.Current.Dispatcher);
+            DJIConnectionService.Initialize(Window.Current.Dispatcher);
+
             ControllerService.Initialize();
             ControllerService.Start();
         }
