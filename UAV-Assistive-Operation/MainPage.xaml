@@ -11,8 +11,11 @@
     <Grid>
         <WebView
             x:Name="MapView"
-            Source="ms-appx-web:///Assets/Map/azuremap.html"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch" />
+            VerticalAlignment="Stretch"
+            d:Source="about:blank"
+            d:DesignWidth="600"
+            d:DesignHeight="400"
+            d:DefaultBackgroundColor="LightGray" />
     </Grid>
 </Page>

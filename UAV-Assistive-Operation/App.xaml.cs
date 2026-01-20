@@ -33,9 +33,7 @@ namespace UAV_Assistive_Operation
             this.InitializeComponent();
             this.Suspending += OnSuspending;
 
-            string djiSdkKey = "7b980d8aa60b87f6b740fd94";
-
-            DJIConnectionService = new DJIConnectionService(djiSdkKey);
+            DJIConnectionService = new DJIConnectionService(Secrets.DjiKey);
             ControllerService = new ControllerService();
 
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Maximized;
