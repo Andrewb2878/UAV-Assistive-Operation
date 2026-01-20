@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Azure Map</title>
+
+    <!--Adding refrences to Azure Maps-->
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" />
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+
+    <script type="text/javascript">
+        //Create an instance of the map control and set some options.
+        function InitMap() {
+            var map = new atlas.Map('map', {
+                center: [-122.33, 47.6],
+                zoom: 12,
+                language: 'en-US',
+                authOptions: {
+                    authType: 'subscriptionKey',
+                    subscriptionKey: '8QLMfuvGRfYK80uF9pQfCGEkFXsGtDZwxEnVzlcZ5uOtZCGLrf6TJQQJ99CAAC5RqLJKLD2KAAAgAZMP2KRB'
+                }
+            });
+        }
+    </script>
+
+    <!--Adding stylesheets-->
+    <link rel="stylesheet" type="text/css" href="azuremap.css" />
+</head>
+
+<body onload="InitMap()">
+    <div id="map"></div>
+</body>
+</html>
