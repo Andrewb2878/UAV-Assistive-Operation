@@ -52,5 +52,6 @@
 			  <Function Type="name:serialPort" />
 		  </Device>
 	  </DeviceCapability>
+    <DeviceCapability Name="location"/>
   </Capabilities>
 </Package>

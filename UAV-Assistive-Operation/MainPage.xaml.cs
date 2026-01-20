@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UAV_Assistive_Operation.Services;
+using Windows.Devices.Geolocation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Gaming.Input;
@@ -29,13 +30,15 @@ namespace UAV_Assistive_Operation
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private MapService _mapService;
 
         public MainPage()
         {
             this.InitializeComponent();
 
             //Loading leaflet map
-            MapView.Source = new Uri("ms-appx-web:///Assets/Map/LeafletMap.html");
+            _mapService = new MapService(MapView);
+            _ = _mapService.InitializeMapAsync();
 
             //Controller subscriptions
             App.ControllerService.GamepadConnected += GamepadConnected;
