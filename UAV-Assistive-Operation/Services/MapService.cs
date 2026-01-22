@@ -17,8 +17,8 @@ namespace UAV_Assistive_Operation.Services
 
         public async Task InitializeMapAsync()
         {
-            double latitude = 51.5072;
-            double longitiude = 0.1276;
+            double latitude = 51.50141;
+            double longitiude = -0.14208;
 
             try
             {

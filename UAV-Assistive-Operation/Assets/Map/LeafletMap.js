@@ -9,10 +9,16 @@ const initialLatitude = getQueryParam('lat');
 const initialLongitude = getQueryParam('lon');
 
 // Initialize map
-const map = L.map('map').setView(
-    [initialLatitude, initialLongitude],
-    18
-);
+const map = L.map('map', {
+    zoomControl: false
+    }).setView([initialLatitude, initialLongitude],18);
+
+map.dragging.disable();
+map.touchZoom.disable();
+map.scrollWheelZoom.disable();
+map.doubleClickZoom.disable();
+map.keyboard.disable();
+
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
