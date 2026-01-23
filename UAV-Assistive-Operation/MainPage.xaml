@@ -163,9 +163,10 @@
 
                     <TextBlock 
                         Grid.Column="0"
-                        Text="Battery: --%"
+                        Text="{Binding Battery.DisplayText}"
                         FontSize="16"
                         HorizontalAlignment="Center"/>
+                        
 
                     <TextBlock 
                         Grid.Column="1"
@@ -249,13 +250,11 @@
             Grid.ColumnSpan="2">
 
             <Grid>
-                <!-- Rows: header + content -->
                 <Grid.RowDefinitions>
                     <RowDefinition Height="40"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Header (styled like top bar) -->
                 <Grid Grid.Row="0">
                     <Grid.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
@@ -336,9 +335,9 @@
                     </ListView.ItemTemplate>
 
                     <!-- Sample entries -->
-                    <local:LogEntry Time="[12:01:10]" EventType="Alert" Message="UAV Connected"/>
-                    <local:LogEntry Time="[12:01:32]" EventType="Alert" Message="GPS Locked"/>
-                    <local:LogEntry Time="[12:02:10]" EventType="Alert" Message="Battery at 95%"/>
+                    <local:LogEntryModel Time="[12:01:10]" EventType="Alert" Message="UAV Connected"/>
+                    <local:LogEntryModel Time="[12:01:32]" EventType="Alert" Message="GPS Locked"/>
+                    <local:LogEntryModel Time="[12:02:10]" EventType="Alert" Message="Battery at 95%"/>
 
                 </ListView>
             </Grid>

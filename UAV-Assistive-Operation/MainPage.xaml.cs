@@ -1,27 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices.WindowsRuntime;
-using UAV_Assistive_Operation.Services;
-using Windows.Devices.Geolocation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+﻿using UAV_Assistive_Operation.Services;
 using Windows.Gaming.Input;
-using Windows.System;
-using Windows.UI;
-using Windows.UI.Composition;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Hosting;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -32,12 +11,14 @@ namespace UAV_Assistive_Operation
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private MapService _mapService;
+        private readonly MapService _mapService;
 
         public MainPage()
         {
             this.InitializeComponent();
 
+            DataContext = App.DJITelemetryService;
+            
             //Loading leaflet map
             _mapService = new MapService(MapView);
             _ = _mapService.InitializeMapAsync();

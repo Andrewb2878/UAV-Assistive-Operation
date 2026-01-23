@@ -8,7 +8,7 @@ namespace UAV_Assistive_Operation.Services
 {
     public class MapService
     {
-        private WebView _mapView;
+        private readonly WebView _mapView;
 
         public MapService(WebView mapView)
         {

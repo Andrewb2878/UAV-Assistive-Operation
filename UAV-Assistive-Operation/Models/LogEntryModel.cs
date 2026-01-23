@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UAV_Assistive_Operation.Models
 {
-    public class LogEntry
+    public class LogEntryModel
     {
         public string Time { get; set; }
         public string EventType { get; set; }

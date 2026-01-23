@@ -26,6 +26,7 @@ namespace UAV_Assistive_Operation
     sealed partial class App : Application
     {
         public static DJIConnectionService DJIConnectionService { get; private set; }
+        public static DJITelemetryService DJITelemetryService { get; private set; }
         public static ControllerService ControllerService { get; private set; }
 
         public App()
@@ -47,13 +48,8 @@ namespace UAV_Assistive_Operation
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
-
-            // Do not repeat app initialization when the Window already has content,
-            // just ensure that the window is active
-            if (rootFrame == null)
+            if (!(Window.Current.Content is Frame rootFrame))
             {
-                // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
@@ -63,27 +59,26 @@ namespace UAV_Assistive_Operation
                     //TODO: Load state from previously suspended application
                 }
 
-                // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
             }
+
+            DJIConnectionService.Initialize(Window.Current.Dispatcher);
+            DJITelemetryService = new DJITelemetryService(Window.Current.Dispatcher);
+
+            DJIConnectionService.AircraftConnected += DJITelemetryService.AircraftConnected;
+            DJIConnectionService.AircraftDisconnected += DJITelemetryService.AircraftDisconnected;
+
+            ControllerService.Initialize();
+            ControllerService.Start();
 
             if (e.PrelaunchActivated == false)
             {
                 if (rootFrame.Content == null)
                 {
-                    // When the navigation stack isn't restored navigate to the first page,
-                    // configuring the new page by passing required information as a navigation
-                    // parameter
                     rootFrame.Navigate(typeof(MainPage), e.Arguments);
                 }
-                // Ensure the current window is active
                 Window.Current.Activate();
             }
-
-            DJIConnectionService.Initialize(Window.Current.Dispatcher);
-
-            ControllerService.Initialize();
-            ControllerService.Start();
         }
 
         /// <summary>

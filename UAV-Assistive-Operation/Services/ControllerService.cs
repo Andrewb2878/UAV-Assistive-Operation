@@ -40,8 +40,10 @@ namespace UAV_Assistive_Operation.Services
             if (_inputTimer != null)
                 return;
 
-            _inputTimer = new DispatcherTimer();
-            _inputTimer.Interval = TimeSpan.FromMilliseconds(20);
+            _inputTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(20)
+            };
             _inputTimer.Tick += Instance_InputUpdate;
             _inputTimer.Start();
         }
