@@ -167,10 +167,9 @@
                         FontSize="16"
                         HorizontalAlignment="Center"/>
                         
-
                     <TextBlock 
                         Grid.Column="1"
-                        Text="Altitude: -- m"
+                        Text="{Binding Altitude.DisplayText}"
                         FontSize="16"
                         HorizontalAlignment="Center"/>
 

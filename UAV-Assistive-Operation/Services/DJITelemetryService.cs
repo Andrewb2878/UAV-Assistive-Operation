@@ -11,9 +11,11 @@ namespace UAV_Assistive_Operation.Services
     {
         private readonly CoreDispatcher _dispatcher;
         private BatteryHandler _batteryHandler;
+        private FlightControllerHandler _flightControllerHandler;
         private bool _running;
 
         public BatteryModel Battery { get; } = new BatteryModel();
+        public AltitudeModel Altitude { get; } = new AltitudeModel();
 
         public DJITelemetryService(CoreDispatcher dispatcher)
         {
@@ -28,6 +30,7 @@ namespace UAV_Assistive_Operation.Services
             _running = true;
 
             SubscribeToBattery();
+            SubscribeToFlightController();
         }
 
         public void AircraftDisconnected()
@@ -36,11 +39,14 @@ namespace UAV_Assistive_Operation.Services
                 return;
 
             _running = false;
-
             Battery.Percentage = null;
+            Altitude.Altitude = null;
+
             UnsubscribeFromBattery();
+            UnsubscribeFromFlightController();
         }
 
+        //Subscribing to events
         private void SubscribeToBattery()
         {
             _batteryHandler = DJISDKManager.Instance.ComponentManager.GetBatteryHandler(0, 0);
@@ -55,6 +61,21 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
+        private void SubscribeToFlightController()
+        {
+            _flightControllerHandler = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0);
+            if (_flightControllerHandler != null)
+            {
+                _flightControllerHandler.AltitudeChanged += AltitudeChanged;
+                Debug.WriteLine("Subscribed to altitude updates");
+            }
+            else
+            {
+                Debug.WriteLine("Flight controller hander not available");
+            }
+        }
+
+        //Unsubscribing from events
         private void UnsubscribeFromBattery()
         {
             if (_batteryHandler != null)
@@ -65,6 +86,17 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
+        private void UnsubscribeFromFlightController()
+        {
+            if ( _flightControllerHandler != null)
+            {
+                _flightControllerHandler.AltitudeChanged -= AltitudeChanged;
+                _flightControllerHandler = null;
+                Debug.WriteLine("Unsubscribed from altitude updates");
+            }
+        }
+
+        //Getting updates from subscriptions
         private async void BatteryPercentChanged(object sender, IntMsg? value)
         {
             if (!_running || value == null)
@@ -73,6 +105,18 @@ namespace UAV_Assistive_Operation.Services
             await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 Battery.Percentage = value.Value.value;
+            });
+        }
+
+        private async void AltitudeChanged(object sender, DoubleMsg? value)
+        {
+            if (!_running || value == null)
+                return;
+
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Debug.WriteLine($"Altitude {value.Value.value:F1}");
+                Altitude.Altitude = value.Value.value;
             });
         }
     }
