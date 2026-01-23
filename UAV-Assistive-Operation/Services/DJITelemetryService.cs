@@ -13,9 +13,13 @@ namespace UAV_Assistive_Operation.Services
         private BatteryHandler _batteryHandler;
         private FlightControllerHandler _flightControllerHandler;
         private bool _running;
+        private const double _MsMph = 2.23694;
+
 
         public BatteryModel Battery { get; } = new BatteryModel();
         public AltitudeModel Altitude { get; } = new AltitudeModel();
+        public SpeedModel Speed { get; } = new SpeedModel();
+
 
         public DJITelemetryService(CoreDispatcher dispatcher)
         {
@@ -41,6 +45,8 @@ namespace UAV_Assistive_Operation.Services
             _running = false;
             Battery.Percentage = null;
             Altitude.Altitude = null;
+            Speed.Horizontal = null;
+            Speed.Vertical = null;
 
             UnsubscribeFromBattery();
             UnsubscribeFromFlightController();
@@ -67,7 +73,8 @@ namespace UAV_Assistive_Operation.Services
             if (_flightControllerHandler != null)
             {
                 _flightControllerHandler.AltitudeChanged += AltitudeChanged;
-                Debug.WriteLine("Subscribed to altitude updates");
+                _flightControllerHandler.VelocityChanged += VelocityChanged;
+                Debug.WriteLine("Subscribed to altitude and velocity updates");
             }
             else
             {
@@ -91,8 +98,9 @@ namespace UAV_Assistive_Operation.Services
             if ( _flightControllerHandler != null)
             {
                 _flightControllerHandler.AltitudeChanged -= AltitudeChanged;
+                _flightControllerHandler.VelocityChanged -= VelocityChanged;
                 _flightControllerHandler = null;
-                Debug.WriteLine("Unsubscribed from altitude updates");
+                Debug.WriteLine("Unsubscribed from altitude and velocity updates");
             }
         }
 
@@ -117,6 +125,26 @@ namespace UAV_Assistive_Operation.Services
             {
                 Debug.WriteLine($"Altitude {value.Value.value:F1}");
                 Altitude.Altitude = value.Value.value;
+            });
+        }
+
+        private async void VelocityChanged(object sender, Velocity3D? value)
+        {
+            if (!_running || value == null)
+                return;
+
+            var velocityNorth = value.Value.x;
+            var velocityEast = value.Value.y;
+            var velocityDown = value.Value.z;
+
+            double horizontalMs = Math.Sqrt(velocityNorth * velocityNorth + velocityEast * velocityEast);
+            double horizontalMph = horizontalMs * _MsMph;
+            double verticalMph = (-velocityDown) * _MsMph;
+
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Speed.Horizontal = horizontalMph;
+                Speed.Vertical = verticalMph;
             });
         }
     }
