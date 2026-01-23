@@ -124,6 +124,8 @@
     </Compile>
     <Compile Include="Models\AltitudeModel.cs" />
     <Compile Include="Models\BatteryModel.cs" />
+    <Compile Include="Models\FlightModeModel.cs" />
+    <Compile Include="Models\GPSModel.cs" />
     <Compile Include="Models\LogEntryModel.cs" />
     <Compile Include="Models\SpeedModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

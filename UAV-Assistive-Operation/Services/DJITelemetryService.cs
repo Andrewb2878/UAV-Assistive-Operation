@@ -17,6 +17,8 @@ namespace UAV_Assistive_Operation.Services
 
 
         public BatteryModel Battery { get; } = new BatteryModel();
+        public FlightModeModel FlightMode { get; } = new FlightModeModel();
+        public GPSModel GPS { get; } = new GPSModel();
         public AltitudeModel Altitude { get; } = new AltitudeModel();
         public SpeedModel Speed { get; } = new SpeedModel();
 
@@ -44,6 +46,8 @@ namespace UAV_Assistive_Operation.Services
 
             _running = false;
             Battery.Percentage = null;
+            FlightMode.FlightMode = null;
+            GPS.SignalLevel = null;
             Altitude.Altitude = null;
             Speed.Horizontal = null;
             Speed.Vertical = null;
@@ -51,6 +55,7 @@ namespace UAV_Assistive_Operation.Services
             UnsubscribeFromBattery();
             UnsubscribeFromFlightController();
         }
+
 
         //Subscribing to events
         private void SubscribeToBattery()
@@ -61,10 +66,6 @@ namespace UAV_Assistive_Operation.Services
                 _batteryHandler.ChargeRemainingInPercentChanged += BatteryPercentChanged;
                 Debug.WriteLine("Subscribed to battery percentage updates");
             }
-            else
-            {
-                Debug.WriteLine("Battery handler not available");
-            }
         }
 
         private void SubscribeToFlightController()
@@ -72,15 +73,16 @@ namespace UAV_Assistive_Operation.Services
             _flightControllerHandler = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0);
             if (_flightControllerHandler != null)
             {
+                InitAltitude();
+                InitVelocity();
+
+                _flightControllerHandler.FlightModeChanged += FlightModeChanged;
+                _flightControllerHandler.GPSSignalLevelChanged += GPSSignalLevelChanged;
                 _flightControllerHandler.AltitudeChanged += AltitudeChanged;
                 _flightControllerHandler.VelocityChanged += VelocityChanged;
-                Debug.WriteLine("Subscribed to altitude and velocity updates");
-            }
-            else
-            {
-                Debug.WriteLine("Flight controller hander not available");
             }
         }
+
 
         //Unsubscribing from events
         private void UnsubscribeFromBattery()
@@ -97,12 +99,50 @@ namespace UAV_Assistive_Operation.Services
         {
             if ( _flightControllerHandler != null)
             {
+                _flightControllerHandler.FlightModeChanged -= FlightModeChanged;
+                _flightControllerHandler.GPSSignalLevelChanged -= GPSSignalLevelChanged;
                 _flightControllerHandler.AltitudeChanged -= AltitudeChanged;
                 _flightControllerHandler.VelocityChanged -= VelocityChanged;
                 _flightControllerHandler = null;
                 Debug.WriteLine("Unsubscribed from altitude and velocity updates");
             }
         }
+
+
+        //Initialising telemetry data
+        private async void InitAltitude()
+        {
+            var altitude = await _flightControllerHandler.GetAltitudeAsync();
+            if (altitude.value != null)
+            {
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Altitude.Altitude = altitude.value.Value.value;
+                });
+            }
+        }
+
+        private async void InitVelocity()
+        {
+            var velocity = await _flightControllerHandler.GetVelocityAsync();
+            if (velocity.value != null)
+            {
+                var velocityNorth = velocity.value.Value.x;
+                var velocityEast = velocity.value.Value.y;
+                var velocityDown = velocity.value.Value.z;
+
+                double horizontalMs = Math.Sqrt(velocityNorth * velocityNorth + velocityEast * velocityEast);
+                double horizontalMph = horizontalMs * _MsMph;
+                double verticalMph = (-velocityDown) * _MsMph;
+
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Speed.Horizontal = horizontalMph;
+                    Speed.Vertical = verticalMph;
+                });
+            }
+        }
+
 
         //Getting updates from subscriptions
         private async void BatteryPercentChanged(object sender, IntMsg? value)
@@ -116,6 +156,28 @@ namespace UAV_Assistive_Operation.Services
             });
         }
 
+        private async void FlightModeChanged(object sender, FCFlightModeMsg? value)
+        {
+            if (!_running || value == null)
+                return;
+
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                FlightMode.FlightMode = value.Value.value;
+            });
+        }
+
+        private async void GPSSignalLevelChanged(object sender, FCGPSSignalLevelMsg? value)
+        {
+            if (!_running || value == null)
+                return;
+
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                GPS.SignalLevel = value.Value.value;
+            });
+        }
+
         private async void AltitudeChanged(object sender, DoubleMsg? value)
         {
             if (!_running || value == null)
@@ -123,7 +185,6 @@ namespace UAV_Assistive_Operation.Services
 
             await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                Debug.WriteLine($"Altitude {value.Value.value:F1}");
                 Altitude.Altitude = value.Value.value;
             });
         }
