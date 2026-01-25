@@ -16,11 +16,11 @@ namespace UAV_Assistive_Operation.Services
         private const double _MsMph = 2.23694;
 
 
-        public BatteryModel Battery { get; } = new BatteryModel();
-        public FlightModeModel FlightMode { get; } = new FlightModeModel();
-        public GPSModel GPS { get; } = new GPSModel();
-        public AltitudeModel Altitude { get; } = new AltitudeModel();
-        public SpeedModel Speed { get; } = new SpeedModel();
+        public BatteryTelemetryModel Battery { get; } = new BatteryTelemetryModel();
+        public FlightModeTelemetryModel FlightMode { get; } = new FlightModeTelemetryModel();
+        public GPSStrengthTelemetryModel GPS { get; } = new GPSStrengthTelemetryModel();
+        public AltitudeTelemetryModel Altitude { get; } = new AltitudeTelemetryModel();
+        public SpeedTelemetryModel Speed { get; } = new SpeedTelemetryModel();
 
 
         public DJITelemetryService(CoreDispatcher dispatcher)

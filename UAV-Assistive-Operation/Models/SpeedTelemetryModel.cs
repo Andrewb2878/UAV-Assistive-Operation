@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace UAV_Assistive_Operation.Models
 {
-    public class SpeedModel : INotifyPropertyChanged
+    public class SpeedTelemetryModel : INotifyPropertyChanged
     {
         private double? _horizontal;
         private double? _vertical;

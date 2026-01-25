@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace UAV_Assistive_Operation.Models
 {
-    public class FlightModeModel : INotifyPropertyChanged
+    public class FlightModeTelemetryModel : INotifyPropertyChanged
     {
         private FCFlightMode? _flightMode;
 

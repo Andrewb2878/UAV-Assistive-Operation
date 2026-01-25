@@ -3,26 +3,26 @@ using System.Runtime.CompilerServices;
 
 namespace UAV_Assistive_Operation.Models
 {
-    public class BatteryModel : INotifyPropertyChanged
+    public class AltitudeTelemetryModel : INotifyPropertyChanged
     {
-        private int? _percentage;
+        private double? _altitude;
 
 
-        public int? Percentage
+        public double? Altitude
         {
-            get => _percentage; 
+            get => _altitude;
             set
             {
-                if (_percentage != value)
+                if (_altitude != value)
                 {
-                    _percentage = value;
+                    _altitude = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(DisplayText));
                 }
             }
         }
 
-        public string DisplayText => Percentage.HasValue ? $"Battery: {Percentage.Value}%" : "Battery: --%";
+        public string DisplayText => Altitude.HasValue ? $"Altitude: {Altitude.Value:F1} m" : "Altitude: -- m";
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -15,10 +15,11 @@ namespace UAV_Assistive_Operation.Services
             _mapView = mapView;
         }
 
-        public async Task InitializeMapAsync()
+        public async Task<Enums.MapInitResult> InitializeMapAsync()
         {
             double latitude = 51.50141;
             double longitiude = -0.14208;
+            bool locationSuccess = true;
 
             try
             {
@@ -29,11 +30,14 @@ namespace UAV_Assistive_Operation.Services
             }
             catch 
             {
+                locationSuccess = false;
                 Debug.WriteLine("MapService: Location failed");
             }
 
             string url = $"ms-appx-web:///Assets/Map/LeafletMap.html?lat={latitude}&lon={longitiude}";
             _mapView.Source = new Uri(url);
+
+            return locationSuccess ? Enums.MapInitResult.success : Enums.MapInitResult.failure;
         }
     }
 }

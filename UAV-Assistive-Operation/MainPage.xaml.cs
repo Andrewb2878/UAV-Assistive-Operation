@@ -1,27 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using UAV_Assistive_Operation.Services;
-using Windows.Devices.Geolocation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Gaming.Input;
-using Windows.System;
-using Windows.UI;
-using Windows.UI.Composition;
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Hosting;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -33,6 +15,7 @@ namespace UAV_Assistive_Operation
     public sealed partial class MainPage : Page
     {
         private readonly MapService _mapService;
+        private bool _mapServiceAvailable = false;
 
         public MainPage()
         {
@@ -42,7 +25,11 @@ namespace UAV_Assistive_Operation
             
             //Loading leaflet map
             _mapService = new MapService(MapView);
-            _ = _mapService.InitializeMapAsync();
+            _ = InitializeMapAsync();
+
+            MapView.NavigationCompleted += MapView_NavigationCompleted;
+            MapView.NavigationFailed += MapView_NavigationFailed;
+
 
             //Controller subscriptions
             App.ControllerService.GamepadConnected += GamepadConnected;
@@ -50,6 +37,33 @@ namespace UAV_Assistive_Operation
             App.ControllerService.GamepadUpdated += GamepadInput;
             App.ControllerService.RawControllerUpdated += RawInput;
 
+        }
+
+        private async Task InitializeMapAsync()
+        {
+            var result = await _mapService.InitializeMapAsync();
+            _mapServiceAvailable = result == Enums.MapInitResult.success;
+
+            if (result != Enums.MapInitResult.success)
+            {
+                MapView.Visibility = Visibility.Collapsed;
+                MapFallback.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void MapView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
+        {
+            if (args.IsSuccess && _mapServiceAvailable)
+            {
+                MapFallback.Visibility = Visibility.Collapsed;
+                MapView.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void MapView_NavigationFailed(object sender, WebViewNavigationFailedEventArgs args) 
+        {
+            MapView.Visibility = Visibility.Collapsed;
+            MapFallback.Visibility = Visibility.Visible;
         }
 
         private void GamepadConnected(Gamepad gamepad)

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace UAV_Assistive_Operation.Models
 {
-    public class GPSModel : INotifyPropertyChanged
+    public class GPSStrengthTelemetryModel : INotifyPropertyChanged
     {
         private FCGPSSignalLevel? _signalLevel;
 
