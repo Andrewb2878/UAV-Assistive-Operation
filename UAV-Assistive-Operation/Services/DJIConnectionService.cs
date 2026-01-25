@@ -10,7 +10,12 @@ namespace UAV_Assistive_Operation.Services
         private readonly string _sdkKey;
         private CoreDispatcher _dispatcher;
 
-        //Airacraft connection/disconnection events for services to subscribe to
+        //Used for aircraft connection/disconnection verification
+        private bool _productPresent;
+        private bool _flightControllerConnected;
+        private bool _isAircraftConnected;
+
+        //Aircraft connection/disconnection events for services to subscribe to
         public event Action AircraftConnected;
         public event Action AircraftDisconnected;
 
@@ -54,20 +59,44 @@ namespace UAV_Assistive_Operation.Services
         private void SubscribeToProductChanges()
         {
             DJISDKManager.Instance.ComponentManager.GetProductHandler(0).ProductTypeChanged += ProductTypeChanged;
+            DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0).ConnectionChanged += FlightControllerConnectionChanged;
         }
 
-        private async void ProductTypeChanged(object sender, ProductTypeMsg? value)
+        //Aircraft connection managment
+        private void ProductTypeChanged(object sender, ProductTypeMsg? value)
         {
+            _productPresent = value != null && value.Value.value != ProductType.UNRECOGNIZED;
+
+            EvaluateConnectionState();
+        }
+
+        private void FlightControllerConnectionChanged(object sender, BoolMsg? value)
+        {
+            if (value == null)
+                return;
+
+            _flightControllerConnected = value.Value.value;
+            EvaluateConnectionState();
+        }
+
+        private async void EvaluateConnectionState()
+        {
+            bool shouldBeConnected = _productPresent && _flightControllerConnected;
+
+            if (shouldBeConnected == _isAircraftConnected)
+                return;
+
+            _isAircraftConnected = shouldBeConnected;
             await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (value != null && value?.value != ProductType.UNRECOGNIZED)
+                if (_isAircraftConnected)
                 {
-                    Debug.WriteLine("The aircraft is now connected.");
+                    Debug.WriteLine("Aircraft connected");
                     AircraftConnected?.Invoke();
                 }
                 else
                 {
-                    Debug.WriteLine("The aircraft is now disconnected.");
+                    Debug.WriteLine("Aircraft disconnected");
                     AircraftDisconnected?.Invoke();
                 }
             });
