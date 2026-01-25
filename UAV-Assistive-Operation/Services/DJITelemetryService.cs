@@ -73,6 +73,8 @@ namespace UAV_Assistive_Operation.Services
             _flightControllerHandler = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0);
             if (_flightControllerHandler != null)
             {
+                InitFlightMode();
+                InitGPSSignalLevel();
                 InitAltitude();
                 InitVelocity();
 
@@ -110,6 +112,30 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Initialising telemetry data
+        private async void InitFlightMode()
+        {
+            var flightMode = await _flightControllerHandler.GetFlightModeAsync();
+            if (flightMode.value != null)
+            {
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    FlightMode.FlightMode = flightMode.value.Value.value;
+                });
+            }
+        }
+
+        private async void InitGPSSignalLevel()
+        {
+            var gpsSignalLevel = await _flightControllerHandler.GetGPSSignalLevelAsync();
+            if (gpsSignalLevel.value != null)
+            {
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    GPS.SignalLevel = gpsSignalLevel.value.Value.value;
+                });
+            }
+        }
+
         private async void InitAltitude()
         {
             var altitude = await _flightControllerHandler.GetAltitudeAsync();
