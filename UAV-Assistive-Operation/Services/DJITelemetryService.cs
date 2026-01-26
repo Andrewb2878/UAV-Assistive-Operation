@@ -93,7 +93,6 @@ namespace UAV_Assistive_Operation.Services
             {
                 _batteryHandler.ChargeRemainingInPercentChanged -= BatteryPercentChanged;
                 _batteryHandler = null;
-                Debug.WriteLine("Unsubscribed to battery percentge updates");
             }
         }
 
@@ -106,7 +105,6 @@ namespace UAV_Assistive_Operation.Services
                 _flightControllerHandler.AltitudeChanged -= AltitudeChanged;
                 _flightControllerHandler.VelocityChanged -= VelocityChanged;
                 _flightControllerHandler = null;
-                Debug.WriteLine("Unsubscribed from altitude and velocity updates");
             }
         }
 
