@@ -2,7 +2,6 @@
 using DJI.WindowsSDK.Components;
 using UAV_Assistive_Operation.Models;
 using System;
-using System.Diagnostics;
 using Windows.UI.Core;
 
 namespace UAV_Assistive_Operation.Services
@@ -64,7 +63,6 @@ namespace UAV_Assistive_Operation.Services
             if (_batteryHandler != null)
             {
                 _batteryHandler.ChargeRemainingInPercentChanged += BatteryPercentChanged;
-                Debug.WriteLine("Subscribed to battery percentage updates");
             }
         }
 
@@ -98,7 +96,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void UnsubscribeFromFlightController()
         {
-            if ( _flightControllerHandler != null)
+            if (_flightControllerHandler != null)
             {
                 _flightControllerHandler.FlightModeChanged -= FlightModeChanged;
                 _flightControllerHandler.GPSSignalLevelChanged -= GPSSignalLevelChanged;

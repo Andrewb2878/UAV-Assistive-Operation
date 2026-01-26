@@ -24,11 +24,14 @@ namespace UAV_Assistive_Operation
             DataContext = App.DJITelemetryService;
             
             //Loading leaflet map
-            _mapService = new MapService(MapView);
+            _mapService = new MapService(Dispatcher, MapView);
             _ = InitializeMapAsync();
 
             MapView.NavigationCompleted += MapView_NavigationCompleted;
             MapView.NavigationFailed += MapView_NavigationFailed;
+
+            //Connecting DJIFlightService to MapService
+            App.DJIFlightDataService.PositionUpdated += UavPositionUpdated;
 
 
             //Controller subscriptions
@@ -64,6 +67,24 @@ namespace UAV_Assistive_Operation
         {
             MapView.Visibility = Visibility.Collapsed;
             MapFallback.Visibility = Visibility.Visible;
+        }
+
+        private async void MapView_ScriptNotify(object sender, NotifyEventArgs args)
+        {
+            if (args.Value == "MapReady")
+            {
+                await _mapService.RefreshMap();
+            }
+        }
+
+        private async void UavPositionUpdated()
+        {
+            var service = App.DJIFlightDataService;
+
+            if (service.Latitude.HasValue && service.Longitude.HasValue)
+            {
+                await _mapService.UpdateUavLocationAsync(service.Latitude.Value, service.Longitude.Value);
+            }
         }
 
         private void GamepadConnected(Gamepad gamepad)

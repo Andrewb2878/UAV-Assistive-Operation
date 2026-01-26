@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading.Tasks;
 using Windows.Devices.Geolocation;
+using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 
 namespace UAV_Assistive_Operation.Services
 {
     public class MapService
     {
+        private readonly CoreDispatcher _dispatcher;
         private readonly WebView _mapView;
 
-        public MapService(WebView mapView)
+        public MapService(CoreDispatcher dispatcher, WebView mapView)
         {
+            _dispatcher = dispatcher;
             _mapView = mapView;
         }
 
@@ -38,6 +42,24 @@ namespace UAV_Assistive_Operation.Services
             _mapView.Source = new Uri(url);
 
             return locationSuccess ? Enums.MapInitResult.success : Enums.MapInitResult.failure;
+        }
+
+        public async Task UpdateUavLocationAsync(double lat, double lon)
+        {
+            string script = $"updateUAVPosition({lat.ToString(CultureInfo.InvariantCulture)}, {lon.ToString(CultureInfo.InvariantCulture)});";
+
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                _ = _mapView.InvokeScriptAsync("eval", new[] { script });
+            });
+        }
+
+        public async Task RefreshMap()
+        {
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                _ = _mapView.InvokeScriptAsync("eval", new[] { "refreshMapSize();" });
+            });
         }
     }
 }
