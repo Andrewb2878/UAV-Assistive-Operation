@@ -1,21 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using UAV_Assistive_Operation.Services;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.ViewManagement;
-using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace UAV_Assistive_Operation
@@ -27,6 +16,7 @@ namespace UAV_Assistive_Operation
     {
         public static DJIConnectionService DJIConnectionService { get; private set; }
         public static DJITelemetryService DJITelemetryService { get; private set; }
+        public static DJIFlightDataService DJIFlightDataService { get; private set; }
         public static ControllerService ControllerService { get; private set; }
 
         public App()
@@ -62,14 +52,18 @@ namespace UAV_Assistive_Operation
                 Window.Current.Content = rootFrame;
             }
 
-            DJIConnectionService.Initialize(Window.Current.Dispatcher);
-            DJITelemetryService = new DJITelemetryService(Window.Current.Dispatcher);
-
-            DJIConnectionService.AircraftConnected += DJITelemetryService.AircraftConnected;
-            DJIConnectionService.AircraftDisconnected += DJITelemetryService.AircraftDisconnected;
-
             ControllerService.Initialize();
             ControllerService.Start();
+            DJIConnectionService.Initialize(Window.Current.Dispatcher);
+            DJITelemetryService = new DJITelemetryService(Window.Current.Dispatcher);
+            DJIFlightDataService = new DJIFlightDataService();
+
+
+            DJIConnectionService.AircraftConnected += DJITelemetryService.AircraftConnected;
+            DJIConnectionService.AircraftConnected += DJIFlightDataService.AircraftConnected;
+
+            DJIConnectionService.AircraftDisconnected += DJITelemetryService.AircraftDisconnected;
+            DJIConnectionService.AircraftDisconnected += DJIFlightDataService.AircraftDisconnected;
 
             if (e.PrelaunchActivated == false)
             {
