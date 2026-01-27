@@ -62,6 +62,8 @@ namespace UAV_Assistive_Operation.Services
             _batteryHandler = DJISDKManager.Instance.ComponentManager.GetBatteryHandler(0, 0);
             if (_batteryHandler != null)
             {
+                InitBatteryPercent();
+
                 _batteryHandler.ChargeRemainingInPercentChanged += BatteryPercentChanged;
             }
         }
@@ -108,6 +110,18 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Initialising telemetry data
+        private async void InitBatteryPercent()
+        {
+            var battery = await _batteryHandler.GetChargeRemainingInPercentAsync();
+            if (battery.value != null)
+            {
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Battery.Percentage = battery.value.Value.value;
+                });
+            }
+        }
+        
         private async void InitFlightMode()
         {
             var flightMode = await _flightControllerHandler.GetFlightModeAsync();

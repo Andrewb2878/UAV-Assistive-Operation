@@ -54,6 +54,7 @@ namespace UAV_Assistive_Operation
 
             ControllerService.Initialize();
             ControllerService.Start();
+
             DJIConnectionService.Initialize(Window.Current.Dispatcher);
             DJITelemetryService = new DJITelemetryService(Window.Current.Dispatcher);
             DJIFlightDataService = new DJIFlightDataService();

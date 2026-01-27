@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.Threading.Tasks;
 using Windows.Devices.Geolocation;
 using Windows.UI.Core;
@@ -10,13 +9,15 @@ namespace UAV_Assistive_Operation.Services
 {
     public class MapService
     {
-        private readonly CoreDispatcher _dispatcher;
         private readonly WebView _mapView;
+        private bool _isMapReady = false;
+        private DateTime _lastLocationUpdateTime = DateTime.MinValue;
+        private const double UpdateIntervalMs = 200;
 
         public MapService(CoreDispatcher dispatcher, WebView mapView)
         {
-            _dispatcher = dispatcher;
             _mapView = mapView;
+            _mapView.NavigationCompleted += MapViewNavigationCompleted;
         }
 
         public async Task<Enums.MapInitResult> InitializeMapAsync()
@@ -44,21 +45,60 @@ namespace UAV_Assistive_Operation.Services
             return locationSuccess ? Enums.MapInitResult.success : Enums.MapInitResult.failure;
         }
 
-        public async Task UpdateUavLocationAsync(double lat, double lon)
+        private void MapViewNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
-            string script = $"updateUAVPosition({lat.ToString(CultureInfo.InvariantCulture)}, {lon.ToString(CultureInfo.InvariantCulture)});";
+            _isMapReady = true;
+        }
 
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+        public async Task UpdateUavLocation(double lat, double lon)
+        {
+            if ((DateTime.Now - _lastLocationUpdateTime).TotalMilliseconds < UpdateIntervalMs)
+                return;
+
+            _lastLocationUpdateTime = DateTime.Now;
+
+            await _mapView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                _ = _mapView.InvokeScriptAsync("eval", new[] { script });
+
+                if (!_isMapReady || _mapView.Source == null)
+                return;
+
+                try
+                {
+                    string latStr = lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    string lonStr = lon.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                    // Filtering out 0 values when aircraft doesn't have a GPS lock
+                    if (Math.Abs(lat) < 0.0001 && Math.Abs(lon) < 0.0001)
+                        return;
+
+                    await _mapView.InvokeScriptAsync("updateUavMarker", new[] { latStr, lonStr });
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"MapService: Failed to update UAV location: {ex.Message}");
+                }
             });
         }
 
-        public async Task RefreshMap()
+        public async Task UpdateUavHeading(double heading)
         {
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            await _mapView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                _ = _mapView.InvokeScriptAsync("eval", new[] { "refreshMapSize();" });
+                if (!_isMapReady || _mapView.Source == null)
+                    return;
+
+                try
+                {
+                    string headingStr = heading.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                    await _mapView.InvokeScriptAsync("updateUavHeading", new[] { headingStr });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"MapService: Failed to update UAV heading: {ex.Message}");
+                }
             });
         }
     }

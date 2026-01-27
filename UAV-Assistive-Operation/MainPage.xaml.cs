@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using UAV_Assistive_Operation.Services;
 using Windows.Gaming.Input;
 using Windows.UI.Xaml;
@@ -29,9 +28,16 @@ namespace UAV_Assistive_Operation
 
             MapView.NavigationCompleted += MapView_NavigationCompleted;
             MapView.NavigationFailed += MapView_NavigationFailed;
+            
+            App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
+            {
+                await _mapService.UpdateUavLocation(lat, lon);
+            };
+            App.DJIFlightDataService.UAVHeadingUpdated += async heading =>
+            {
+                await _mapService.UpdateUavHeading(heading);
+            };
 
-            //Connecting DJIFlightService to MapService
-            App.DJIFlightDataService.PositionUpdated += UavPositionUpdated;
 
 
             //Controller subscriptions
@@ -67,24 +73,6 @@ namespace UAV_Assistive_Operation
         {
             MapView.Visibility = Visibility.Collapsed;
             MapFallback.Visibility = Visibility.Visible;
-        }
-
-        private async void MapView_ScriptNotify(object sender, NotifyEventArgs args)
-        {
-            if (args.Value == "MapReady")
-            {
-                await _mapService.RefreshMap();
-            }
-        }
-
-        private async void UavPositionUpdated()
-        {
-            var service = App.DJIFlightDataService;
-
-            if (service.Latitude.HasValue && service.Longitude.HasValue)
-            {
-                await _mapService.UpdateUavLocationAsync(service.Latitude.Value, service.Longitude.Value);
-            }
         }
 
         private void GamepadConnected(Gamepad gamepad)

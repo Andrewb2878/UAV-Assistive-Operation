@@ -143,13 +143,14 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\Map\UAVIcon.png" />
+    <Content Include="Assets\Map\UAVHeading.png" />
     <Content Include="Assets\MenuLogoWhite.png" />
     <Content Include="Assets\Map\LeafletMap.css" />
     <Content Include="Assets\Map\LeafletMap.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Map\LeafletMap.js" />
-    <Content Include="Assets\Map\UAVIcon.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />

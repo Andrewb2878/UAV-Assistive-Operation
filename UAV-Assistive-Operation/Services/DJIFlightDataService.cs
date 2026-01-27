@@ -1,21 +1,19 @@
 ﻿using DJI.WindowsSDK;
 using DJI.WindowsSDK.Components;
 using System;
-using Windows.UI.Core;
+using System.Diagnostics;
 
 namespace UAV_Assistive_Operation.Services
 {
     public class DJIFlightDataService
     {
         private FlightControllerHandler _flightControllerHandler;
+        private readonly MapService _mapService;
         private bool _running;
 
 
-        public double? Latitude { get; private set; }
-        public double? Longitude { get; private set; }
-
-
-        public event Action PositionUpdated;
+        public event Action<double, double> UavLocationUpdated;
+        public event Action<double> UAVHeadingUpdated;
 
         public void AircraftConnected()
         {
@@ -32,8 +30,6 @@ namespace UAV_Assistive_Operation.Services
                 return;
 
             _running = false;
-            Latitude = null;
-            Longitude = null;
 
             UnsubscribeToFlightController();
         }
@@ -46,6 +42,7 @@ namespace UAV_Assistive_Operation.Services
             if (_flightControllerHandler != null)
             {
                 _flightControllerHandler.AircraftLocationChanged += AircraftLocationChanged;
+                _flightControllerHandler.AttitudeChanged += AircraftAttitudeChanged;
             }
         }
 
@@ -56,6 +53,7 @@ namespace UAV_Assistive_Operation.Services
             if (_flightControllerHandler != null)
             {
                 _flightControllerHandler.AircraftLocationChanged -= AircraftLocationChanged;
+                _flightControllerHandler.AttitudeChanged -= AircraftAttitudeChanged;
                 _flightControllerHandler = null;
             }
         }
@@ -67,10 +65,20 @@ namespace UAV_Assistive_Operation.Services
             if (!_running || value == null)
                 return;
 
-            Latitude = value.Value.latitude;
-            Longitude = value.Value.longitude;
+            var lat = value.Value.latitude; 
+            var lon = value.Value.longitude;
 
-            PositionUpdated?.Invoke();
+           UavLocationUpdated?.Invoke(lat, lon);
+        }
+
+        private void AircraftAttitudeChanged(object sender, Attitude? attitude)
+        {
+            if (!_running || attitude == null)
+                return;
+
+            var yaw = attitude.Value.yaw;
+
+            UAVHeadingUpdated?.Invoke(yaw);
         }
     }
 }
