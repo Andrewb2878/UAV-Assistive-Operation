@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using UAV_Assistive_Operation.Enums;
 
 namespace UAV_Assistive_Operation.Models
 {
     public class LogEntryModel
     {
-        public string Time { get; set; }
-        public string EventType { get; set; }
+        public DateTime Time { get; set; }
+        public LogEventType EventType { get; set; }
         public string Message { get; set; }
+
+        public string TimeDisplay => Time.ToString("HH:mm:ss");
     }
 }

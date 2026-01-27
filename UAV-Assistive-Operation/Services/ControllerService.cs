@@ -68,6 +68,7 @@ namespace UAV_Assistive_Operation.Services
         private void RawControllerAdded(object sender, RawGameController controller)
         {
             _rawGameController = controller;
+            EventLogService.Instance.Log(Enums.LogEventType.Connection, "Controller connected");
             RawControllerConnected?.Invoke(controller);
         }
 
@@ -77,6 +78,7 @@ namespace UAV_Assistive_Operation.Services
                 return;
 
             _rawGameController = null;
+            EventLogService.Instance.Log(Enums.LogEventType.Connection, "Controller disconnected");
             RawControllerDisconnected?.Invoke();
         }
 

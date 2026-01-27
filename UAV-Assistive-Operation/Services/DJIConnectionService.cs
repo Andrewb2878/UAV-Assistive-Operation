@@ -1,6 +1,7 @@
 ﻿using DJI.WindowsSDK;
 using System;
 using System.Diagnostics;
+using UAV_Assistive_Operation.Enums;
 using Windows.UI.Core;
 
 namespace UAV_Assistive_Operation.Services
@@ -46,7 +47,8 @@ namespace UAV_Assistive_Operation.Services
         {
             if (result == SDKError.NO_ERROR)
             {
-                System.Diagnostics.Debug.WriteLine("SDK Registered successfully.");
+                
+                Debug.WriteLine("SDK Registered successfully.");
                 SubscribeToProductChanges();
             }
             else

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using UAV_Assistive_Operation.Models;
 using UAV_Assistive_Operation.Services;
 using Windows.Gaming.Input;
 using Windows.UI.Xaml;
@@ -20,7 +21,7 @@ namespace UAV_Assistive_Operation
         {
             this.InitializeComponent();
 
-            DataContext = App.DJITelemetryService;
+            DataContext = new MainViewModel();
             
             //Loading leaflet map
             _mapService = new MapService(Dispatcher, MapView);
