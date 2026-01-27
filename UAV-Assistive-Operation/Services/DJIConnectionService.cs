@@ -93,12 +93,12 @@ namespace UAV_Assistive_Operation.Services
             {
                 if (_isAircraftConnected)
                 {
-                    Debug.WriteLine("Aircraft connected");
+                    EventLogService.Instance.Log(LogEventType.Connection, "Aircraft connected");
                     AircraftConnected?.Invoke();
                 }
                 else
                 {
-                    Debug.WriteLine("Aircraft disconnected");
+                    EventLogService.Instance.Log(LogEventType.Connection, "Aircraft disconnected");
                     AircraftDisconnected?.Invoke();
                 }
             });

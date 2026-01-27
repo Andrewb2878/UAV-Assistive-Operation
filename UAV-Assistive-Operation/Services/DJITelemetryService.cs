@@ -3,6 +3,7 @@ using DJI.WindowsSDK.Components;
 using UAV_Assistive_Operation.Models;
 using System;
 using Windows.UI.Core;
+using UAV_Assistive_Operation.Enums;
 
 namespace UAV_Assistive_Operation.Services
 {
@@ -119,6 +120,7 @@ namespace UAV_Assistive_Operation.Services
                 {
                     Battery.Percentage = battery.value.Value.value;
                 });
+                EventLogService.Instance.Log(LogEventType.Info, $"Battery charge at: {battery.value.Value.value}%");
             }
         }
         

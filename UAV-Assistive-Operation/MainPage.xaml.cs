@@ -58,6 +58,7 @@ namespace UAV_Assistive_Operation
             {
                 MapView.Visibility = Visibility.Collapsed;
                 MapFallback.Visibility = Visibility.Visible;
+                EventLogService.Instance.Log(Enums.LogEventType.Warning, "MapService: Currently unavailable, please ensure the device is connected to the internet");
             }
         }
 

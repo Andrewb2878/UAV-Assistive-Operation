@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using UAV_Assistive_Operation.Enums;
 using Windows.Devices.Geolocation;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
@@ -36,13 +37,13 @@ namespace UAV_Assistive_Operation.Services
             catch 
             {
                 locationSuccess = false;
-                Debug.WriteLine("MapService: Location failed");
+                EventLogService.Instance.Log(LogEventType.Error, "MapService: Location failed");
             }
 
             string url = $"ms-appx-web:///Assets/Map/LeafletMap.html?lat={latitude}&lon={longitiude}";
             _mapView.Source = new Uri(url);
 
-            return locationSuccess ? Enums.MapInitResult.success : Enums.MapInitResult.failure;
+            return locationSuccess ? MapInitResult.success : MapInitResult.failure;
         }
 
         private void MapViewNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
@@ -75,9 +76,9 @@ namespace UAV_Assistive_Operation.Services
                     await _mapView.InvokeScriptAsync("updateUavMarker", new[] { latStr, lonStr });
 
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Debug.WriteLine($"MapService: Failed to update UAV location: {ex.Message}");
+                    EventLogService.Instance.Log(LogEventType.Error, "MapService: Failed to update UAV location");
                 }
             });
         }
@@ -95,9 +96,9 @@ namespace UAV_Assistive_Operation.Services
 
                     await _mapView.InvokeScriptAsync("updateUavHeading", new[] { headingStr });
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Debug.WriteLine($"MapService: Failed to update UAV heading: {ex.Message}");
+                    EventLogService.Instance.Log(LogEventType.Error, "MapService: Failed to update UAV heading");
                 }
             });
         }
