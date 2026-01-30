@@ -19,6 +19,8 @@ namespace UAV_Assistive_Operation.Models
                     _signalLevel = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(DisplayText));
+                    OnPropertyChanged(nameof(SufficientForFlight));
+                    OnPropertyChanged(nameof(GPSBannerText));
                 }
             }
         }
@@ -51,6 +53,28 @@ namespace UAV_Assistive_Operation.Models
                     default:
                         return "---";
                 }
+            }
+        }
+
+        public bool SufficientForFlight
+        {
+            get
+            {
+                if (!SignalLevel.HasValue)
+                    return false;
+
+                return SignalLevel.Value >= FCGPSSignalLevel.LEVEL_2;
+            }
+        }
+
+        public string GPSBannerText
+        {
+            get
+            {
+                if (!SignalLevel.HasValue)
+                    return "---";
+
+                return SufficientForFlight ? "Ready to fly" : "Insufficient GPS signal";
             }
         }
 

@@ -125,6 +125,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\ActiveAlertModel.cs" />
     <Compile Include="Models\AltitudeTelemetryModel.cs" />
     <Compile Include="Models\BatteryTelemetryModel.cs" />
     <Compile Include="Models\FlightModeTelemetryModel.cs" />
@@ -137,7 +138,9 @@
     <Compile Include="Services\DJIConnectionService.cs" />
     <Compile Include="Services\DJIFlightDataService.cs" />
     <Compile Include="Services\DJITelemetryService.cs" />
+    <Compile Include="Services\EvaluationService.cs" />
     <Compile Include="Services\EventLogService.cs" />
+    <Compile Include="Services\AlertService.cs" />
     <Compile Include="Services\MapService.cs" />
     <Compile Include="Services\Secrets.cs" />
   </ItemGroup>

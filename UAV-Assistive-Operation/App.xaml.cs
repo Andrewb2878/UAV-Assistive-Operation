@@ -2,6 +2,7 @@
 using UAV_Assistive_Operation.Services;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -18,6 +19,10 @@ namespace UAV_Assistive_Operation
         public static DJITelemetryService DJITelemetryService { get; private set; }
         public static DJIFlightDataService DJIFlightDataService { get; private set; }
         public static ControllerService ControllerService { get; private set; }
+        public static AlertService AlertService { get; internal set; }
+        public static EvaluationService EvaluationService { get; private set; }
+
+        public static CoreDispatcher UIDispatcher { get; private set; }
 
         public App()
         {
@@ -29,6 +34,22 @@ namespace UAV_Assistive_Operation
 
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Maximized;
             
+        }
+
+        public static async void RunOnUIThread(Action action)
+        {
+            if (UIDispatcher == null)
+                return;
+
+            if (UIDispatcher.HasThreadAccess)
+            {
+                action();
+            }
+            else
+            {
+                await UIDispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
+                    new Windows.UI.Core.DispatchedHandler(action));
+            }
         }
 
         /// <summary>
@@ -52,12 +73,17 @@ namespace UAV_Assistive_Operation
                 Window.Current.Content = rootFrame;
             }
 
+            UIDispatcher = Window.Current.Dispatcher;
+
             ControllerService.Initialize();
             ControllerService.Start();
 
             DJIConnectionService.Initialize(Window.Current.Dispatcher);
             DJITelemetryService = new DJITelemetryService(Window.Current.Dispatcher);
             DJIFlightDataService = new DJIFlightDataService();
+            AlertService = new AlertService();
+            EvaluationService = new EvaluationService(DJIConnectionService, DJITelemetryService,
+                                                        DJIFlightDataService, ControllerService, AlertService);
 
 
             DJIConnectionService.AircraftConnected += DJITelemetryService.AircraftConnected;

@@ -98,7 +98,7 @@ namespace UAV_Assistive_Operation.Services
                 }
                 else
                 {
-                    EventLogService.Instance.Log(LogEventType.Connection, "Aircraft disconnected");
+                    EventLogService.Instance.Log(LogEventType.Warning, "Aircraft disconnected");
                     AircraftDisconnected?.Invoke();
                 }
             });

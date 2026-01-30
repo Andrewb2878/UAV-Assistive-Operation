@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using Windows.Devices.Geolocation;

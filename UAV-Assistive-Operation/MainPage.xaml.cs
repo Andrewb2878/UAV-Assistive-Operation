@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel;
+using System.Threading.Tasks;
 using UAV_Assistive_Operation.Models;
 using UAV_Assistive_Operation.Services;
 using Windows.Gaming.Input;
@@ -17,19 +18,20 @@ namespace UAV_Assistive_Operation
         private readonly MapService _mapService;
         private bool _mapServiceAvailable = false;
 
+
         public MainPage()
         {
             this.InitializeComponent();
-
             DataContext = new MainViewModel();
-            
+
+
             //Loading leaflet map
             _mapService = new MapService(Dispatcher, MapView);
             _ = InitializeMapAsync();
-
             MapView.NavigationCompleted += MapView_NavigationCompleted;
             MapView.NavigationFailed += MapView_NavigationFailed;
-            
+
+
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
             {
                 await _mapService.UpdateUavLocation(lat, lon);
@@ -40,15 +42,18 @@ namespace UAV_Assistive_Operation
             };
 
 
+            //Alert banner
+            App.AlertService.AlertState("TEST_ALERT", true, "Test alert", 1);
+
 
             //Controller subscriptions
             App.ControllerService.GamepadConnected += GamepadConnected;
             App.ControllerService.GamepadDisconnected += GamepadDisconnected;
             App.ControllerService.GamepadUpdated += GamepadInput;
             App.ControllerService.RawControllerUpdated += RawInput;
-
         }
 
+        //Map methods
         private async Task InitializeMapAsync()
         {
             var result = await _mapService.InitializeMapAsync();
@@ -76,6 +81,7 @@ namespace UAV_Assistive_Operation
             MapView.Visibility = Visibility.Collapsed;
             MapFallback.Visibility = Visibility.Visible;
         }
+
 
         private void GamepadConnected(Gamepad gamepad)
         {

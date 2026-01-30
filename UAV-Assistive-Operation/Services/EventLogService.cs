@@ -24,8 +24,8 @@ namespace UAV_Assistive_Operation.Services
 
         public ObservableCollection<LogEntryModel> LogEntries { get;  } = new ObservableCollection<LogEntryModel>();
 
-        private EventLogService() { }
 
+        private EventLogService() { }
 
         public void Log(LogEventType eventType, String message)
         {
@@ -37,7 +37,11 @@ namespace UAV_Assistive_Operation.Services
             };
 
             _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                Windows.UI.Core.CoreDispatcherPriority.Normal, () => LogEntries.Insert(0, entry));
+                Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    LogEntries.Add(entry);
+                });
+                
         }
     }
 }

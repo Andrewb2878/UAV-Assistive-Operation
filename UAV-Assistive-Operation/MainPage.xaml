@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:converters="using:UAV_Assistive_Operation.Converters"
+    xmlns:converters="using:UAV_Assistive_Operation.Converters" 
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -48,22 +48,22 @@
             </Grid>
         </Grid>
 
-        <!-- Top bar overlay -->
-        <Grid Grid.Row="0" Grid.ColumnSpan="2" Height="56">
+        <!--Top bar overlay-->
+        <Grid x:Name="AlertGrid"  Grid.Row="0" Grid.ColumnSpan="2" Height="56">
             <Grid.Background>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                <LinearGradientBrush x:Name="AlertBackground" StartPoint="0,0" EndPoint="1,0">
                     <GradientStop Color="SlateGray" Offset="0.0"/>
                     <GradientStop Color="SlateGray" Offset="0.48"/>
                     <GradientStop Color="#002F4F4F" Offset="0.65"/>
                     <GradientStop Color="#002F4F4F" Offset="1.0"/>
                 </LinearGradientBrush>
             </Grid.Background>
-            
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="56"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            
+
             <!--Menu Icon-->
             <Image 
                 x:Name="MenuIcon"
@@ -74,7 +74,7 @@
                 Source="Assets/MenuLogoWhite.png" 
                 Stretch="Uniform" 
                 Opacity="1"/>
-            
+
             <!--Divider-->
             <Line 
                 Grid.ColumnSpan="2" 
@@ -82,17 +82,16 @@
                 X2="56" Y2="48" 
                 Stroke="White" 
                 StrokeThickness="1"/>
-            
+
             <!--Flight warnings-->
             <TextBlock 
                 Grid.Column="1" 
                 VerticalAlignment="Center"
                 Padding="15" 
-                Text="----" 
+                Text="{Binding Alerts.DisplayMessage}" 
                 Foreground="White" 
                 FontWeight="SemiBold" 
                 FontSize="18"/>
-            
         </Grid>
 
         <!--Left panel-->
@@ -312,13 +311,22 @@
 
                 <!-- Log content -->
                 <ListView 
+                    x:Name="EventLogList"
                     Grid.Row="1"
                     ItemsSource="{Binding EventLog}"
                     Background="AliceBlue"
                     Padding="10,4"
                     BorderThickness="0"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                    SelectionMode="None">
+                    SelectionMode="None"
+                    VerticalAlignment="Stretch">
+
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel VerticalAlignment="Bottom" 
+                             ItemsUpdatingScrollMode="KeepLastItemInView" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
 
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">

@@ -20,9 +20,7 @@ namespace UAV_Assistive_Operation.Services
         public event Action<RawGameController> RawControllerConnected;
         public event Action RawControllerDisconnected;
 
-        /// <summary>
-        /// Subscribes to controller add/remove events
-        /// </summary>
+
         public void Initialize()
         {
             Gamepad.GamepadAdded += GamepadAdded;
@@ -30,11 +28,10 @@ namespace UAV_Assistive_Operation.Services
 
             RawGameController.RawGameControllerAdded += RawControllerAdded;
             RawGameController.RawGameControllerRemoved += RawControllerRemoved;
+
         }
 
-        /// <summary>
-        /// Begins polling input at 50Hz
-        /// </summary>
+
         public void Start()
         {
             if (_inputTimer != null)
@@ -78,7 +75,7 @@ namespace UAV_Assistive_Operation.Services
                 return;
 
             _rawGameController = null;
-            EventLogService.Instance.Log(Enums.LogEventType.Connection, "Controller disconnected");
+            EventLogService.Instance.Log(Enums.LogEventType.Warning, "Controller disconnected");
             RawControllerDisconnected?.Invoke();
         }
 
@@ -98,6 +95,6 @@ namespace UAV_Assistive_Operation.Services
                 _rawGameController.GetCurrentReading(buttons, switches, axes);
                 RawControllerUpdated?.Invoke(buttons, switches, axes);
             }
-        }
+        } 
     }
 }
