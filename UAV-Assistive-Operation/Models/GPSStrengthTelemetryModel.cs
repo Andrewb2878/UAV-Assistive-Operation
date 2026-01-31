@@ -63,7 +63,7 @@ namespace UAV_Assistive_Operation.Models
                 if (!SignalLevel.HasValue)
                     return false;
 
-                return SignalLevel.Value >= FCGPSSignalLevel.LEVEL_2;
+                return SignalLevel.Value >= FCGPSSignalLevel.LEVEL_1;
             }
         }
 

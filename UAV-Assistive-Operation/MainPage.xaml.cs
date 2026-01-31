@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using System;
 using System.Threading.Tasks;
 using UAV_Assistive_Operation.Models;
 using UAV_Assistive_Operation.Services;
@@ -15,6 +15,8 @@ namespace UAV_Assistive_Operation
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private bool _controllerPopupShown = false;
+        private bool _controllerConn = false;
         private readonly MapService _mapService;
         private bool _mapServiceAvailable = false;
 
@@ -23,6 +25,7 @@ namespace UAV_Assistive_Operation
         {
             this.InitializeComponent();
             DataContext = new MainViewModel();
+            this.Loaded += MainPage_Loaded;
 
 
             //Loading leaflet map
@@ -43,7 +46,7 @@ namespace UAV_Assistive_Operation
 
 
             //Alert banner
-            App.AlertService.AlertState("TEST_ALERT", true, "Test alert", 1);
+            //App.AlertService.AlertState("TEST_ALERT", true, "Test alert", 5);
 
 
             //Controller subscriptions
@@ -51,6 +54,11 @@ namespace UAV_Assistive_Operation
             App.ControllerService.GamepadDisconnected += GamepadDisconnected;
             App.ControllerService.GamepadUpdated += GamepadInput;
             App.ControllerService.RawControllerUpdated += RawInput;
+        }
+
+        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            CheckControllerOnStartup();
         }
 
         //Map methods
@@ -83,13 +91,35 @@ namespace UAV_Assistive_Operation
         }
 
 
-        private void GamepadConnected(Gamepad gamepad)
+        //Controller methods
+        private async void CheckControllerOnStartup()
         {
+            if (!_controllerConn)
+            {
+                _controllerPopupShown = true;
+                await ControllerRequiredPopup.ShowAsync();
+            }
+        }
 
+        private async void GamepadConnected(Gamepad gamepad)
+        {
+            _controllerConn = true;
+
+            if (_controllerPopupShown)
+            {
+                _controllerPopupShown = false;
+
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    if (ControllerRequiredPopup.IsLoaded)
+                        ControllerRequiredPopup.Hide();
+                });
+            }
         }
 
         private void GamepadDisconnected()
         {
+            _controllerConn = false;
 
         }
 

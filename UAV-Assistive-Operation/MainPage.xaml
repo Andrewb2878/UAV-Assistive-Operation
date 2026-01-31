@@ -26,17 +26,40 @@
             <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
 
+        <!--Initial Controller Connection Popup-->
+        <ContentDialog
+            x:Name="ControllerRequiredPopup"
+            Title="Controller Disconnected"
+            PrimaryButtonText="Waiting for controller…"
+            IsPrimaryButtonEnabled="False"
+            CloseButtonText=""
+            DefaultButton="Primary">
+
+            <StackPanel Spacing="12">
+                <TextBlock
+                    Text="Please connect a controller to continue."
+                    TextWrapping="Wrap" />
+
+                <ProgressRing
+                    IsActive="True"
+                    Width="32"
+                    Height="32"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
+        </ContentDialog>
+
         <!--UAV map-->
         <Grid x:Name="MapContainer" Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
             <WebView
             x:Name="MapView"
             VerticalAlignment="Stretch"
+            Visibility="Collapsed"
             d:Source="about:blank"
             d:DesignWidth="800"
             d:DesignHeight="600"
             d:DefaultBackgroundColor="Gray" />
 
-            <Grid x:Name="MapFallback" Background="DarkGray">
+            <Grid x:Name="MapFallback" Visibility="Visible" Background="DarkGray">
                 <TextBlock 
                     Text="Map Service Unavailable"
                     Foreground="White"

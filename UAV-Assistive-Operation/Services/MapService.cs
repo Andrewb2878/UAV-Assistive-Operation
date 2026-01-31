@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using Windows.Devices.Geolocation;
+using Windows.Networking.Connectivity;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 
@@ -20,8 +21,20 @@ namespace UAV_Assistive_Operation.Services
             _mapView.NavigationCompleted += MapViewNavigationCompleted;
         }
 
+        private bool HasInternet()
+        {
+            var profile = NetworkInformation.GetInternetConnectionProfile();
+            return profile != null && profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
+        }
+
         public async Task<Enums.MapInitResult> InitializeMapAsync()
         {
+            if (!HasInternet())
+            {
+                EventLogService.Instance.Log(LogEventType.Warning, "MapService: No internet connection");
+                return MapInitResult.failure;
+            }
+
             double latitude = 51.50141;
             double longitiude = -0.14208;
             bool locationSuccess = true;
