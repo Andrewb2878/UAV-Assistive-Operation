@@ -1,6 +1,7 @@
 ﻿using DJI.WindowsSDK;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using Windows.UI.Core;
 
@@ -79,6 +80,21 @@ namespace UAV_Assistive_Operation.Services
 
             _flightControllerConnected = value.Value.value;
             EvaluateConnectionState();
+        }
+
+        private async Task<bool> ValidateAircraftConnectionAsync()
+        {
+            try
+            {
+                var handler = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0,0);
+
+                var result = await handler.GetAircraftNameAsync();
+                return result.value.Value.value != null && result.error == SDKError.NO_ERROR;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private async void EvaluateConnectionState()

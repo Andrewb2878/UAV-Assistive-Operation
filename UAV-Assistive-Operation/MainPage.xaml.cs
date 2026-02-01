@@ -16,7 +16,7 @@ namespace UAV_Assistive_Operation
     public sealed partial class MainPage : Page
     {
         private bool _controllerPopupShown = false;
-        private bool _controllerConn = false;
+        private bool _controllerConn = App.ControllerService.CheckControllerConnection();
         private readonly MapService _mapService;
         private bool _mapServiceAvailable = false;
 
@@ -24,8 +24,12 @@ namespace UAV_Assistive_Operation
         public MainPage()
         {
             this.InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = new MainViewModel();         
             this.Loaded += MainPage_Loaded;
+
+
+            //Alert banner
+            //App.AlertService.AlertState("TEST_ALERT", true, "Test alert", 5);
 
 
             //Loading leaflet map
@@ -34,7 +38,7 @@ namespace UAV_Assistive_Operation
             MapView.NavigationCompleted += MapView_NavigationCompleted;
             MapView.NavigationFailed += MapView_NavigationFailed;
 
-
+            //Loading UAV map updates
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
             {
                 await _mapService.UpdateUavLocation(lat, lon);
@@ -45,15 +49,12 @@ namespace UAV_Assistive_Operation
             };
 
 
-            //Alert banner
-            //App.AlertService.AlertState("TEST_ALERT", true, "Test alert", 5);
-
-
             //Controller subscriptions
             App.ControllerService.GamepadConnected += GamepadConnected;
             App.ControllerService.GamepadDisconnected += GamepadDisconnected;
             App.ControllerService.GamepadUpdated += GamepadInput;
             App.ControllerService.RawControllerUpdated += RawInput;
+            
         }
 
         private void MainPage_Loaded(object sender, RoutedEventArgs e)

@@ -28,7 +28,6 @@ namespace UAV_Assistive_Operation.Services
 
             RawGameController.RawGameControllerAdded += RawControllerAdded;
             RawGameController.RawGameControllerRemoved += RawControllerRemoved;
-
         }
 
 
@@ -46,6 +45,11 @@ namespace UAV_Assistive_Operation.Services
         }
 
         //Gamepad added/removed
+        public bool CheckControllerConnection()
+        {
+            return _rawGameController != null;
+        }
+
         private void GamepadAdded(object sender, Gamepad gamepad)
         {
             _gamepad = gamepad;
