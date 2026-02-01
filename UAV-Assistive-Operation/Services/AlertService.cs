@@ -69,6 +69,23 @@ namespace UAV_Assistive_Operation.Services
             }       
         }
 
+        public void ClearAlerts()
+        {
+            if (!_activeAlerts.Any())
+                return;
+            
+            _activeAlerts.Clear();
+            App.RunOnUIThread(() =>
+            {
+                if (_cycleTimer.IsEnabled)
+                    _cycleTimer.Stop();
+
+                _showAlert = true;
+            });
+            NotifyUI();
+        }
+
+
         private string CalculateDisplayMessage()
         {
             if (!_activeAlerts.Any())

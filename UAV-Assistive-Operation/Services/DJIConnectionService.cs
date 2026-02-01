@@ -89,6 +89,7 @@ namespace UAV_Assistive_Operation.Services
                 var handler = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0,0);
 
                 var result = await handler.GetAircraftNameAsync();
+                EventLogService.Instance.Log(LogEventType.Debug, result.value.Value.value.ToString());
                 return result.value.Value.value != null && result.error == SDKError.NO_ERROR;
             }
             catch

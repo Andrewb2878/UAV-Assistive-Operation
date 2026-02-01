@@ -321,6 +321,7 @@ namespace UAV_Assistive_Operation.Services
         {
             if (!_connection)
             {
+                _alertService.ClearAlerts();
                 _alertService.FlightStatus("Aircraft Disconnected"); return;
             }
             if (_flying)
