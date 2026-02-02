@@ -56,8 +56,24 @@
 
         <!--Initial UAV Connection Popup-->
         <ContentDialog
-            x:Name="UAVRequiredPopup">
-            
+            x:Name="UAVRequiredPopup"
+            Title="UAV Disconnected"
+            PrimaryButtonText="Waiting for UAV…"
+            IsPrimaryButtonEnabled="False"
+            CloseButtonText=""
+            DefaultButton="Primary">
+
+            <StackPanel Spacing="12">
+                <TextBlock
+                    Text="Please connect a UAV to continue."
+                    TextWrapping="Wrap" />
+
+                <ProgressRing
+                    IsActive="True"
+                    Width="32"
+                    Height="32"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
         </ContentDialog>
         
 

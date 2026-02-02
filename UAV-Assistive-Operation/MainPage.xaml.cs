@@ -15,7 +15,7 @@ namespace UAV_Assistive_Operation
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private UIPopupService _popupService;
+        private readonly UIPopupService _popupService;
         private readonly MapService _mapService;
         private bool _uavConn = App.DJIConnectionService.CheckAircraftConnected();
         private bool _controllerConn = App.ControllerService.CheckControllerConnection();
@@ -54,8 +54,6 @@ namespace UAV_Assistive_Operation
             //Controller subscriptions
             App.ControllerService.GamepadConnected += GamepadConnected;
             App.ControllerService.GamepadDisconnected += GamepadDisconnected;
-            App.ControllerService.GamepadUpdated += GamepadInput;
-            App.ControllerService.RawControllerUpdated += RawInput;
             
         }
 
@@ -126,17 +124,6 @@ namespace UAV_Assistive_Operation
         private void GamepadDisconnected()
         {
             _controllerConn = false;
-            EvaluatePopupState();
-
-        }
-
-        private void GamepadInput(GamepadReading gamepad)
-        {
-
-        }
-
-        private void RawInput(bool[] buttons, GameControllerSwitchPosition[] switches, double[] axes)
-        {
 
         }
     }
