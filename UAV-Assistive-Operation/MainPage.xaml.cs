@@ -1,5 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
 using UAV_Assistive_Operation.Services;
 using Windows.Gaming.Input;
@@ -15,25 +15,27 @@ namespace UAV_Assistive_Operation
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private bool _controllerPopupShown = false;
-        private bool _controllerConn = App.ControllerService.CheckControllerConnection();
+        private UIPopupService _popupService;
         private readonly MapService _mapService;
+        private bool _uavConn = App.DJIConnectionService.CheckAircraftConnected();
+        private bool _controllerConn = App.ControllerService.CheckControllerConnection();
         private bool _mapServiceAvailable = false;
 
 
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             DataContext = new MainViewModel();         
-            this.Loaded += MainPage_Loaded;
+            Loaded += MainPage_Loaded;
 
 
-            //Alert banner
-            //App.AlertService.AlertState("TEST_ALERT", true, "Test alert", 5);
+            //Initializing popups
+            _popupService = new UIPopupService();
+            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, UAVRequiredPopup);
 
 
             //Loading leaflet map
-            _mapService = new MapService(Dispatcher, MapView);
+            _mapService = new MapService(MapView);
             _ = InitializeMapAsync();
             MapView.NavigationCompleted += MapView_NavigationCompleted;
             MapView.NavigationFailed += MapView_NavigationFailed;
@@ -57,22 +59,44 @@ namespace UAV_Assistive_Operation
             
         }
 
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        private void MainPage_Loaded(object sender, RoutedEventArgs args)
         {
-            CheckControllerOnStartup();
+            EvaluatePopupState();
+        }
+
+
+        //UI methods
+        private void EvaluatePopupState()
+        {
+            if (!_controllerConn)
+            {
+                _popupService.ShowPopup(UIPopups.ControllerRequired);
+            }
+            /*else if (!App.ControllerService.ControllerMapped())
+            {
+                _popupService.ShowPopup(UIPopups.ControllerRemapping);
+            }*/
+            else if (!_uavConn)
+            {
+                _popupService.ShowPopup(UIPopups.UAVRequired);
+            }
+            else
+            {
+                _popupService.ShowPopup(UIPopups.None);
+            }
         }
 
         //Map methods
         private async Task InitializeMapAsync()
         {
             var result = await _mapService.InitializeMapAsync();
-            _mapServiceAvailable = result == Enums.MapInitResult.success;
+            _mapServiceAvailable = result == MapInitResult.success;
 
-            if (result != Enums.MapInitResult.success)
+            if (result != MapInitResult.success)
             {
                 MapView.Visibility = Visibility.Collapsed;
                 MapFallback.Visibility = Visibility.Visible;
-                EventLogService.Instance.Log(Enums.LogEventType.Warning, "MapService: Currently unavailable");
+                EventLogService.Instance.Log(LogEventType.Warning, "MapService: Currently unavailable");
             }
         }
 
@@ -93,38 +117,20 @@ namespace UAV_Assistive_Operation
 
 
         //Controller methods
-        private async void CheckControllerOnStartup()
-        {
-            if (!_controllerConn)
-            {
-                _controllerPopupShown = true;
-                await ControllerRequiredPopup.ShowAsync();
-            }
-        }
-
-        private async void GamepadConnected(Gamepad gamepad)
+        private void GamepadConnected(Gamepad gamepad)
         {
             _controllerConn = true;
-
-            if (_controllerPopupShown)
-            {
-                _controllerPopupShown = false;
-
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    if (ControllerRequiredPopup.IsLoaded)
-                        ControllerRequiredPopup.Hide();
-                });
-            }
+            EvaluatePopupState();
         }
 
         private void GamepadDisconnected()
         {
             _controllerConn = false;
+            EvaluatePopupState();
 
         }
 
-        private void GamepadInput(Windows.Gaming.Input.GamepadReading gamepad)
+        private void GamepadInput(GamepadReading gamepad)
         {
 
         }

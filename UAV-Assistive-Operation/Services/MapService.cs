@@ -15,11 +15,13 @@ namespace UAV_Assistive_Operation.Services
         private DateTime _lastLocationUpdateTime = DateTime.MinValue;
         private const double UpdateIntervalMs = 200;
 
-        public MapService(CoreDispatcher dispatcher, WebView mapView)
+
+        public MapService(WebView mapView)
         {
             _mapView = mapView;
             _mapView.NavigationCompleted += MapViewNavigationCompleted;
         }
+
 
         private bool HasInternet()
         {
@@ -27,7 +29,7 @@ namespace UAV_Assistive_Operation.Services
             return profile != null && profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
         }
 
-        public async Task<Enums.MapInitResult> InitializeMapAsync()
+        public async Task<MapInitResult> InitializeMapAsync()
         {
             if (!HasInternet())
             {
@@ -58,6 +60,7 @@ namespace UAV_Assistive_Operation.Services
             return locationSuccess ? MapInitResult.success : MapInitResult.failure;
         }
 
+
         private void MapViewNavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
             _isMapReady = true;
@@ -70,7 +73,7 @@ namespace UAV_Assistive_Operation.Services
 
             _lastLocationUpdateTime = DateTime.Now;
 
-            await _mapView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            await App.RunOnUIThread(async () =>
             {
 
                 if (!_isMapReady || _mapView.Source == null)
@@ -97,7 +100,7 @@ namespace UAV_Assistive_Operation.Services
 
         public async Task UpdateUavHeading(double heading)
         {
-            await _mapView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            await App.RunOnUIThread(async () =>
             {
                 if (!_isMapReady || _mapView.Source == null)
                     return;

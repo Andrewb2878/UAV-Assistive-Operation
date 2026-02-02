@@ -2,14 +2,12 @@
 using DJI.WindowsSDK.Components;
 using UAV_Assistive_Operation.Models;
 using System;
-using Windows.UI.Core;
 using UAV_Assistive_Operation.Enums;
 
 namespace UAV_Assistive_Operation.Services
 {
     public class DJITelemetryService
     {
-        private readonly CoreDispatcher _dispatcher;
         private BatteryHandler _batteryHandler;
         private FlightControllerHandler _flightControllerHandler;
         private bool _running;
@@ -22,11 +20,6 @@ namespace UAV_Assistive_Operation.Services
         public AltitudeTelemetryModel Altitude { get; } = new AltitudeTelemetryModel();
         public SpeedTelemetryModel Speed { get; } = new SpeedTelemetryModel();
 
-
-        public DJITelemetryService(CoreDispatcher dispatcher)
-        {
-            _dispatcher = dispatcher;
-        }
 
         public void AircraftConnected()
         {
@@ -116,7 +109,7 @@ namespace UAV_Assistive_Operation.Services
             var battery = await _batteryHandler.GetChargeRemainingInPercentAsync();
             if (battery.value != null)
             {
-                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await App.RunOnUIThread(() =>
                 {
                     Battery.Percentage = battery.value.Value.value;
                 });
@@ -129,7 +122,7 @@ namespace UAV_Assistive_Operation.Services
             var flightMode = await _flightControllerHandler.GetFlightModeAsync();
             if (flightMode.value != null)
             {
-                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await App.RunOnUIThread(() =>
                 {
                     FlightMode.FlightMode = flightMode.value.Value.value;
                 });
@@ -141,7 +134,7 @@ namespace UAV_Assistive_Operation.Services
             var gpsSignalLevel = await _flightControllerHandler.GetGPSSignalLevelAsync();
             if (gpsSignalLevel.value != null)
             {
-                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await App.RunOnUIThread(() =>
                 {
                     GPS.SignalLevel = gpsSignalLevel.value.Value.value;
                 });
@@ -153,7 +146,7 @@ namespace UAV_Assistive_Operation.Services
             var altitude = await _flightControllerHandler.GetAltitudeAsync();
             if (altitude.value != null)
             {
-                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await App.RunOnUIThread(() =>
                 {
                     Altitude.Altitude = altitude.value.Value.value;
                 });
@@ -173,7 +166,7 @@ namespace UAV_Assistive_Operation.Services
                 double horizontalMph = horizontalMs * _MsMph;
                 double verticalMph = (-velocityDown) * _MsMph;
 
-                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await App.RunOnUIThread(() =>
                 {
                     Speed.Horizontal = horizontalMph;
                     Speed.Vertical = verticalMph;
@@ -188,7 +181,7 @@ namespace UAV_Assistive_Operation.Services
             if (!_running || value == null)
                 return;
 
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await App.RunOnUIThread(() =>
             {
                 Battery.Percentage = value.Value.value;
             });
@@ -199,7 +192,7 @@ namespace UAV_Assistive_Operation.Services
             if (!_running || value == null)
                 return;
 
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await App.RunOnUIThread(() =>
             {
                 FlightMode.FlightMode = value.Value.value;
             });
@@ -210,7 +203,7 @@ namespace UAV_Assistive_Operation.Services
             if (!_running || value == null)
                 return;
 
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await App.RunOnUIThread(() =>
             {
                 GPS.SignalLevel = value.Value.value;
             });
@@ -221,7 +214,7 @@ namespace UAV_Assistive_Operation.Services
             if (!_running || value == null)
                 return;
 
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await App.RunOnUIThread(() =>
             {
                 Altitude.Altitude = value.Value.value;
             });
@@ -240,7 +233,7 @@ namespace UAV_Assistive_Operation.Services
             double horizontalMph = horizontalMs * _MsMph;
             double verticalMph = (-velocityDown) * _MsMph;
 
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await App.RunOnUIThread(() =>
             {
                 Speed.Horizontal = horizontalMph;
                 Speed.Vertical = verticalMph;

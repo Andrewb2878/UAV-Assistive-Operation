@@ -36,8 +36,7 @@ namespace UAV_Assistive_Operation.Services
                 Message = message
             };
 
-            _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            _ = App.RunOnUIThread(() =>
                 {
                     LogEntries.Add(entry);
                 });

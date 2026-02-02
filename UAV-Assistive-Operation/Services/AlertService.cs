@@ -75,7 +75,7 @@ namespace UAV_Assistive_Operation.Services
                 return;
             
             _activeAlerts.Clear();
-            App.RunOnUIThread(() =>
+            _ = App.RunOnUIThread(() =>
             {
                 if (_cycleTimer.IsEnabled)
                     _cycleTimer.Stop();
@@ -101,7 +101,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void TimerState()
         {
-            App.RunOnUIThread(() =>
+            _ = App.RunOnUIThread(() =>
             {
                 bool nonCriticalAlert = _activeAlerts.Values.Any(a => !a.IsCritical);
 

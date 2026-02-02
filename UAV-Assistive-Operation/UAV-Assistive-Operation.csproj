@@ -122,6 +122,7 @@
     <Compile Include="Converters\EventTypeToColorConverter.cs" />
     <Compile Include="Enums\LogEventType.cs" />
     <Compile Include="Enums\MapInitResult.cs" />
+    <Compile Include="Enums\UIPopups.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -143,6 +144,7 @@
     <Compile Include="Services\AlertService.cs" />
     <Compile Include="Services\MapService.cs" />
     <Compile Include="Services\Secrets.cs" />
+    <Compile Include="Services\UIPopupService.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

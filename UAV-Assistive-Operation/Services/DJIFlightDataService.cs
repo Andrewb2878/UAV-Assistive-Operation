@@ -50,8 +50,6 @@ namespace UAV_Assistive_Operation.Services
             {
                 InitAircraftFlyingChanged();
                 InitMotorStuck();
-                InitSeriousLowBattery();
-                InitLowBattery();
 
                 _flightControllerHandler.AircraftLocationChanged += AircraftLocationChanged;
                 _flightControllerHandler.AttitudeChanged += AircraftAttitudeChanged;
@@ -95,20 +93,6 @@ namespace UAV_Assistive_Operation.Services
             var stuck = await _flightControllerHandler.GetIsMotorStuckAsync();
             if (stuck.value != null)
                 MotorStuckChanged?.Invoke(stuck.value.Value.value);      
-        }
-        
-        private async void InitSeriousLowBattery()
-        {
-            var seriousBattery = await _flightControllerHandler.GetIsSeriousLowBatteryWarningAsync();
-            if (seriousBattery.value != null)
-                SeriousBatteryChanged?.Invoke(seriousBattery.value.Value.value);
-        }
-
-        private async void InitLowBattery()
-        {
-            var lowBattery = await _flightControllerHandler.GetIsLowBatteryWarningAsync();
-            if (lowBattery.value != null)
-                LowBatteryChanged?.Invoke(lowBattery.value.Value.value);
         }
 
 

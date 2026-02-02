@@ -48,6 +48,19 @@
             </StackPanel>
         </ContentDialog>
 
+        <!--Controller Remapping Popup-->
+        <ContentDialog
+            x:Name="ControllerRemappingPopup">
+            
+        </ContentDialog>
+
+        <!--Initial UAV Connection Popup-->
+        <ContentDialog
+            x:Name="UAVRequiredPopup">
+            
+        </ContentDialog>
+        
+
         <!--UAV map-->
         <Grid x:Name="MapContainer" Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
             <WebView

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using UAV_Assistive_Operation.Services;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -36,7 +37,7 @@ namespace UAV_Assistive_Operation
             
         }
 
-        public static async void RunOnUIThread(Action action)
+        public static async Task RunOnUIThread(Action action)
         {
             if (UIDispatcher == null)
                 return;
@@ -47,8 +48,8 @@ namespace UAV_Assistive_Operation
             }
             else
             {
-                await UIDispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
-                    new Windows.UI.Core.DispatchedHandler(action));
+                await UIDispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    new DispatchedHandler(action));
             }
         }
 
@@ -78,8 +79,8 @@ namespace UAV_Assistive_Operation
             ControllerService.Initialize();
             ControllerService.Start();
 
-            DJIConnectionService.Initialize(Window.Current.Dispatcher);
-            DJITelemetryService = new DJITelemetryService(Window.Current.Dispatcher);
+            DJIConnectionService.Initialize();
+            DJITelemetryService = new DJITelemetryService();
             DJIFlightDataService = new DJIFlightDataService();
             AlertService = new AlertService();
             EvaluationService = new EvaluationService(DJIConnectionService, DJITelemetryService,

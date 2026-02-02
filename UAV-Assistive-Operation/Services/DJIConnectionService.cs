@@ -3,14 +3,12 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
-using Windows.UI.Core;
 
 namespace UAV_Assistive_Operation.Services
 {
     public class DJIConnectionService
     {
         private readonly string _sdkKey;
-        private CoreDispatcher _dispatcher;
 
         //Used for aircraft connection/disconnection verification
         private bool _productPresent;
@@ -29,10 +27,8 @@ namespace UAV_Assistive_Operation.Services
         /// <summary>
         /// Triggers one time SDK setup
         /// </summary>
-        /// <param name="dispatcher"></param>
-        public void Initialize(CoreDispatcher dispatcher)
+        public void Initialize()
         {
-            _dispatcher = dispatcher;
             RegisterSdk();
         }
 
@@ -89,7 +85,6 @@ namespace UAV_Assistive_Operation.Services
                 var handler = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0,0);
 
                 var result = await handler.GetAircraftNameAsync();
-                EventLogService.Instance.Log(LogEventType.Debug, result.value.Value.value.ToString());
                 return result.value.Value.value != null && result.error == SDKError.NO_ERROR;
             }
             catch
@@ -100,13 +95,15 @@ namespace UAV_Assistive_Operation.Services
 
         private async void EvaluateConnectionState()
         {
+            //EventLogService.Instance.Log(LogEventType.Debug, $"Product present value: {_productPresent}");
+            //EventLogService.Instance.Log(LogEventType.Debug, $"flight controller value: {_flightControllerConnected}");
             bool shouldBeConnected = _productPresent && _flightControllerConnected;
 
             if (shouldBeConnected == _isAircraftConnected)
                 return;
 
             _isAircraftConnected = shouldBeConnected;
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await App.RunOnUIThread(() =>
             {
                 if (_isAircraftConnected)
                 {
@@ -119,6 +116,11 @@ namespace UAV_Assistive_Operation.Services
                     AircraftDisconnected?.Invoke();
                 }
             });
+        }
+
+        public bool CheckAircraftConnected()
+        {
+            return _isAircraftConnected;
         }
     }
 }
