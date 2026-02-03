@@ -6,8 +6,8 @@ namespace UAV_Assistive_Operation.Services
 {
     public class DJIFlightDataService
     {
-        private FlightControllerHandler _flightControllerHandler;        
-        private bool _running;
+        private FlightControllerHandler _flightControllerHandler;
+        private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
 
 
         //MapService relevant events for services to subscribe to
@@ -24,20 +24,11 @@ namespace UAV_Assistive_Operation.Services
 
         public void AircraftConnected()
         {
-            if (_running)
-                return;
-
-            _running = true;
             SubscribeToFlightController();
         }
 
         public void AircraftDisconnected()
         {
-            if (!_running)
-                return;
-
-            _running = false;
-
             UnsubscribeToFlightController();
         }
 
@@ -99,7 +90,7 @@ namespace UAV_Assistive_Operation.Services
         //Getting updates from subscriptions
         private void AircraftLocationChanged(object sender, LocationCoordinate2D? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             var lat = value.Value.latitude; 
@@ -109,7 +100,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void AircraftAttitudeChanged(object sender, Attitude? attitude)
         {
-            if (!_running || attitude == null)
+            if (!IsAircraftConnected || attitude == null)
                 return;
 
             var yaw = attitude.Value.yaw;
@@ -118,7 +109,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void AircraftFlyingChanged(object sender, BoolMsg? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             var flying = value.Value.value;
@@ -127,7 +118,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void SeriousLowBattery(object sender, BoolMsg? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             var seriousBattery = value.Value.value;
@@ -136,7 +127,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void LowBattery(object sender, BoolMsg? value)
         {
-            if (!_running || value == null) 
+            if (!IsAircraftConnected || value == null) 
                 return;
 
             var lowBattery = value.Value.value;
@@ -145,7 +136,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void MotorStartFailure(object sender, FCMotorStartFailureErrorMsg? value)
         {
-            if (_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             var motorStartFailure = value.Value.value;
@@ -154,7 +145,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void WindWarning(object sender, FCWindWarningMsg? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             var level = value.Value.value;

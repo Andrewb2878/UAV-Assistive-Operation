@@ -5,6 +5,6 @@
         None,
         ControllerRequired,
         ControllerRemapping,
-        UAVRequired
+        AircraftRequired
     }
 }

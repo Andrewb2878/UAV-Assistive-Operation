@@ -10,7 +10,7 @@ namespace UAV_Assistive_Operation.Services
 
         private ContentDialog _controllerRequired;
         private ContentDialog _controllerRemap;
-        private ContentDialog _uavRequired;
+        private ContentDialog _aircraftRequired;
 
 
         public void RegisterPopups(ContentDialog controllerRequired, ContentDialog controllerRemap,
@@ -18,7 +18,7 @@ namespace UAV_Assistive_Operation.Services
         {
             _controllerRequired = controllerRequired;
             _controllerRemap = controllerRemap;
-            _uavRequired = uavRequired;
+            _aircraftRequired = uavRequired;
         }
 
         public async void ShowPopup(UIPopups popup)
@@ -51,8 +51,8 @@ namespace UAV_Assistive_Operation.Services
                     return _controllerRequired;
                 case UIPopups.ControllerRemapping:
                     return _controllerRemap;
-                case UIPopups.UAVRequired:
-                    return _uavRequired;
+                case UIPopups.AircraftRequired:
+                    return _aircraftRequired;
                 default: 
                     return null;
             };

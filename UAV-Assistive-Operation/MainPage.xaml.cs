@@ -17,8 +17,8 @@ namespace UAV_Assistive_Operation
     {
         private readonly UIPopupService _popupService;
         private readonly MapService _mapService;
-        private bool _uavConn = App.DJIConnectionService.CheckAircraftConnected();
         private bool _controllerConn = App.ControllerService.CheckControllerConnection();
+        private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
         private bool _mapServiceAvailable = false;
 
 
@@ -31,7 +31,7 @@ namespace UAV_Assistive_Operation
 
             //Initializing popups
             _popupService = new UIPopupService();
-            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, UAVRequiredPopup);
+            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);
 
 
             //Loading leaflet map
@@ -49,6 +49,9 @@ namespace UAV_Assistive_Operation
             {
                 await _mapService.UpdateUavHeading(heading);
             };
+
+            //Aircraft subscriptions
+            App.DJIConnectionService.AircraftConnected += AircraftConnected;
 
 
             //Controller subscriptions
@@ -74,9 +77,9 @@ namespace UAV_Assistive_Operation
             {
                 _popupService.ShowPopup(UIPopups.ControllerRemapping);
             }*/
-            else if (!_uavConn)
+            else if (!IsAircraftConnected)
             {
-                _popupService.ShowPopup(UIPopups.UAVRequired);
+                _popupService.ShowPopup(UIPopups.AircraftRequired);
             }
             else
             {
@@ -111,6 +114,13 @@ namespace UAV_Assistive_Operation
         {
             MapView.Visibility = Visibility.Collapsed;
             MapFallback.Visibility = Visibility.Visible;
+        }
+
+
+        //Aircraft methods
+       private void AircraftConnected()
+        {
+            EvaluatePopupState();
         }
 
 

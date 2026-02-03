@@ -13,7 +13,8 @@ namespace UAV_Assistive_Operation.Services
         //Used for aircraft connection/disconnection verification
         private bool _productPresent;
         private bool _flightControllerConnected;
-        private bool _isAircraftConnected;
+
+        public bool IsAircraftConnected { get; private set; }
 
         //Aircraft connection/disconnection events for services to subscribe to
         public event Action AircraftConnected;
@@ -99,13 +100,13 @@ namespace UAV_Assistive_Operation.Services
             //EventLogService.Instance.Log(LogEventType.Debug, $"flight controller value: {_flightControllerConnected}");
             bool shouldBeConnected = _productPresent && _flightControllerConnected;
 
-            if (shouldBeConnected == _isAircraftConnected)
+            if (shouldBeConnected == IsAircraftConnected)
                 return;
 
-            _isAircraftConnected = shouldBeConnected;
+            IsAircraftConnected = shouldBeConnected;
             await App.RunOnUIThread(() =>
             {
-                if (_isAircraftConnected)
+                if (IsAircraftConnected)
                 {
                     EventLogService.Instance.Log(LogEventType.Connection, "Aircraft connected");
                     AircraftConnected?.Invoke();
@@ -120,7 +121,7 @@ namespace UAV_Assistive_Operation.Services
 
         public bool CheckAircraftConnected()
         {
-            return _isAircraftConnected;
+            return IsAircraftConnected;
         }
     }
 }

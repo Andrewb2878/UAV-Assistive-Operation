@@ -10,8 +10,9 @@ namespace UAV_Assistive_Operation.Services
     {
         private BatteryHandler _batteryHandler;
         private FlightControllerHandler _flightControllerHandler;
-        private bool _running;
         private const double _MsMph = 2.23694;
+
+        private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
 
 
         public BatteryTelemetryModel Battery { get; } = new BatteryTelemetryModel();
@@ -23,21 +24,12 @@ namespace UAV_Assistive_Operation.Services
 
         public void AircraftConnected()
         {
-            if (_running)
-                return;
-
-            _running = true;
-
             SubscribeToBattery();
             SubscribeToFlightController();
         }
 
         public void AircraftDisconnected()
         {
-            if (!_running)
-                return;
-
-            _running = false;
             Battery.Percentage = null;
             FlightMode.FlightMode = null;
             GPS.SignalLevel = null;
@@ -178,7 +170,7 @@ namespace UAV_Assistive_Operation.Services
         //Getting updates from subscriptions
         private async void BatteryPercentChanged(object sender, IntMsg? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             await App.RunOnUIThread(() =>
@@ -189,7 +181,7 @@ namespace UAV_Assistive_Operation.Services
 
         private async void FlightModeChanged(object sender, FCFlightModeMsg? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             await App.RunOnUIThread(() =>
@@ -200,7 +192,7 @@ namespace UAV_Assistive_Operation.Services
 
         private async void GPSSignalLevelChanged(object sender, FCGPSSignalLevelMsg? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             await App.RunOnUIThread(() =>
@@ -211,7 +203,7 @@ namespace UAV_Assistive_Operation.Services
 
         private async void AltitudeChanged(object sender, DoubleMsg? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             await App.RunOnUIThread(() =>
@@ -222,7 +214,7 @@ namespace UAV_Assistive_Operation.Services
 
         private async void VelocityChanged(object sender, Velocity3D? value)
         {
-            if (!_running || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             var velocityNorth = value.Value.x;
