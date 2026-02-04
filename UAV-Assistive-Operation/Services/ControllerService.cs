@@ -6,8 +6,11 @@ namespace UAV_Assistive_Operation.Services
 {
     public class ControllerService
     {
+        public bool IsControllerConnected { get; private set; }
+        public RawGameController RawController { get; private set; }
+
+
         private Gamepad _gamepad;
-        private RawGameController _rawGameController;
         private DispatcherTimer _inputTimer;
 
         //Input events for services to subscribe to
@@ -45,11 +48,6 @@ namespace UAV_Assistive_Operation.Services
         }
 
         //Gamepad added/removed
-        public bool CheckControllerConnection()
-        {
-            return _rawGameController != null;
-        }
-
         private void GamepadAdded(object sender, Gamepad gamepad)
         {
             _gamepad = gamepad;
@@ -68,17 +66,21 @@ namespace UAV_Assistive_Operation.Services
         //Raw controller added/removed
         private void RawControllerAdded(object sender, RawGameController controller)
         {
-            _rawGameController = controller;
+            RawController = controller;
+            IsControllerConnected = true;
+
             EventLogService.Instance.Log(Enums.LogEventType.Connection, "Controller connected");
             RawControllerConnected?.Invoke(controller);
         }
 
         private void RawControllerRemoved(object sender, RawGameController controller)
         {
-            if (_rawGameController != controller)
+            if (RawController != controller)
                 return;
 
-            _rawGameController = null;
+            RawController = null;
+            IsControllerConnected = false;
+
             EventLogService.Instance.Log(Enums.LogEventType.Warning, "Controller disconnected");
             RawControllerDisconnected?.Invoke();
         }
@@ -90,13 +92,13 @@ namespace UAV_Assistive_Operation.Services
                 GamepadUpdated?.Invoke(_gamepad.GetCurrentReading());
             }
 
-            if (_rawGameController != null)
+            if (RawController != null)
             {
-                var buttons = new bool[_rawGameController.ButtonCount];
-                var switches = new GameControllerSwitchPosition[_rawGameController.SwitchCount];
-                var axes = new double[_rawGameController.AxisCount];
+                var buttons = new bool[RawController.ButtonCount];
+                var switches = new GameControllerSwitchPosition[RawController.SwitchCount];
+                var axes = new double[RawController.AxisCount];
 
-                _rawGameController.GetCurrentReading(buttons, switches, axes);
+                RawController.GetCurrentReading(buttons, switches, axes);
                 RawControllerUpdated?.Invoke(buttons, switches, axes);
             }
         } 

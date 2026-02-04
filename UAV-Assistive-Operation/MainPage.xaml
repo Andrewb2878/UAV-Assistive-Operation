@@ -50,7 +50,96 @@
 
         <!--Controller Remapping Popup-->
         <ContentDialog
-            x:Name="ControllerRemappingPopup">
+            x:Name="ControllerRemappingPopup"
+            Padding="0"
+            Title="Controller Configurator"
+            PrimaryButtonText=""
+            CloseButtonText=""
+            IsPrimaryButtonEnabled="False"
+            DefaultButton="None"
+            Width="720">
+
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0">                    
+                    <StackPanel x:Name="RemapList" Spacing="6">
+
+                        <!--Control Row Template-->
+                        <Grid x:Name="ThrottleUpRow">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid ColumnSpacing="12">
+
+                                <!-- Highlight background -->
+                                <Border
+                                    x:Name="ThrottleUpHighlight"
+                                    Background="#FFE0E0E0"
+                                    CornerRadius="10"
+                                    Padding="22"
+                                    Visibility="Collapsed"
+                                    Grid.ColumnSpan="2"/>
+
+                                <!-- Content -->
+                                <Grid ColumnSpacing="100">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="1.3*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock
+                                        Text="Throttle up:"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center" />
+
+                                    <TextBox
+                                        Grid.Column="1"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        IsReadOnly="True"
+                                        PlaceholderText="Waiting for input..."
+                                        BorderBrush="SlateGray"
+                                        CornerRadius="8" />
+                                </Grid>
+
+                            </Grid>
+
+                            <TextBlock
+                                Grid.Row="1"
+                                x:Name="ThrottleUpError"
+                                Foreground="Red"
+                                FontSize="12"
+                                Margin="8,2,8,0"
+                                Visibility="Collapsed" />
+
+                        </Grid>
+                        
+                        <!--More control entires here-->
+                        
+                    </StackPanel>
+                </ScrollViewer>
+                
+                <!--Progress bar-->
+                <StackPanel Grid.Row="1" Spacing="8" Margin="0,12,0,0">
+                    <TextBlock
+                        x:Name="RemapProgressText"
+                        Text="Setting inputs..."
+                        HorizontalAlignment="Center"
+                        Visibility="Collapsed" />
+
+                    <ProgressBar
+                        x:Name="RemapProgressBar"
+                        IsIndeterminate="True"
+                        Height="6"
+                        Visibility="Collapsed" />
+                </StackPanel>
+            </Grid>
             
         </ContentDialog>
 

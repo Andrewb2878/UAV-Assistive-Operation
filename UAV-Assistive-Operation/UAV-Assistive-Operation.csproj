@@ -119,7 +119,11 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Configuration\ControlRemappingRules.cs" />
     <Compile Include="Converters\EventTypeToColorConverter.cs" />
+    <Compile Include="Enums\ApplicationControls.cs" />
+    <Compile Include="Enums\AxisPolarity.cs" />
+    <Compile Include="Enums\InputTypes.cs" />
     <Compile Include="Enums\LogEventType.cs" />
     <Compile Include="Enums\MapInitResult.cs" />
     <Compile Include="Enums\UIPopups.cs" />
@@ -129,12 +133,15 @@
     <Compile Include="Models\ActiveAlertModel.cs" />
     <Compile Include="Models\AltitudeTelemetryModel.cs" />
     <Compile Include="Models\BatteryTelemetryModel.cs" />
+    <Compile Include="Models\ControlRulesModel.cs" />
     <Compile Include="Models\FlightModeTelemetryModel.cs" />
     <Compile Include="Models\GPSStrengthTelemetryModel.cs" />
+    <Compile Include="Models\InputBindingModel.cs" />
     <Compile Include="Models\LogEntryModel.cs" />
     <Compile Include="Models\MainViewModel.cs" />
     <Compile Include="Models\SpeedTelemetryModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ControllerRemappingService.cs" />
     <Compile Include="Services\ControllerService.cs" />
     <Compile Include="Services\DJIConnectionService.cs" />
     <Compile Include="Services\DJIFlightDataService.cs" />
@@ -190,6 +197,7 @@
       <HintPath>..\DJIWindowsSDK\DJIWindowsSDK.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

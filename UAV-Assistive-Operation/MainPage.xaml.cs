@@ -17,7 +17,10 @@ namespace UAV_Assistive_Operation
     {
         private readonly UIPopupService _popupService;
         private readonly MapService _mapService;
-        private bool _controllerConn = App.ControllerService.CheckControllerConnection();
+        private readonly ControllerRemappingService _remappingService;
+
+        private bool IsControllerConnected => App.ControllerService.IsControllerConnected;
+        private bool IsControllerRemapped => _remappingService.IsFullyRemapped;
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
         private bool _mapServiceAvailable = false;
 
@@ -50,14 +53,15 @@ namespace UAV_Assistive_Operation
                 await _mapService.UpdateUavHeading(heading);
             };
 
+            //Initializing remapping service
+            _remappingService = new ControllerRemappingService();
+
             //Aircraft subscriptions
             App.DJIConnectionService.AircraftConnected += AircraftConnected;
 
 
             //Controller subscriptions
-            App.ControllerService.GamepadConnected += GamepadConnected;
-            App.ControllerService.GamepadDisconnected += GamepadDisconnected;
-            
+            App.ControllerService.RawControllerConnected += RawControllerConnected;            
         }
 
         private void MainPage_Loaded(object sender, RoutedEventArgs args)
@@ -69,14 +73,15 @@ namespace UAV_Assistive_Operation
         //UI methods
         private void EvaluatePopupState()
         {
-            if (!_controllerConn)
+            if (!IsControllerConnected)
             {
                 _popupService.ShowPopup(UIPopups.ControllerRequired);
             }
-            /*else if (!App.ControllerService.ControllerMapped())
+            else if (!IsControllerRemapped)
             {
                 _popupService.ShowPopup(UIPopups.ControllerRemapping);
-            }*/
+                ShowRemapping(ApplicationControls.ThrottleUp);
+            }
             else if (!IsAircraftConnected)
             {
                 _popupService.ShowPopup(UIPopups.AircraftRequired);
@@ -86,6 +91,15 @@ namespace UAV_Assistive_Operation
                 _popupService.ShowPopup(UIPopups.None);
             }
         }
+
+        private async void ShowRemapping(ApplicationControls controls)
+        {
+            await App.RunOnUIThread(() =>
+            {
+                ThrottleUpHighlight.Visibility = Visibility.Visible;
+            });
+        }
+
 
         //Map methods
         private async Task InitializeMapAsync()
@@ -125,16 +139,9 @@ namespace UAV_Assistive_Operation
 
 
         //Controller methods
-        private void GamepadConnected(Gamepad gamepad)
+        private void RawControllerConnected(RawGameController controller)
         {
-            _controllerConn = true;
             EvaluatePopupState();
-        }
-
-        private void GamepadDisconnected()
-        {
-            _controllerConn = false;
-
         }
     }
 }
