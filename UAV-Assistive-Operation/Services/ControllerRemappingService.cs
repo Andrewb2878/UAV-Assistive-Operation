@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UAV_Assistive_Operation.Configuration;
 using UAV_Assistive_Operation.Enums;
+using UAV_Assistive_Operation.Helpers;
 using UAV_Assistive_Operation.Models;
 using Windows.Gaming.Input;
 
@@ -61,6 +62,20 @@ namespace UAV_Assistive_Operation.Services
         {
             error = null;
 
+            //Ensures against multiple controls assigned to the same input
+            foreach (var existingEntry in _binding)
+            {
+                if (existingEntry.Key == control) 
+                    continue;
+                
+                var existing = existingEntry.Value;
+                if (existing.Type == binding.Type && existing.Index == binding.Index)
+                {
+                    error = $"Input already used by {existingEntry.Key.GetDisplayName()}";
+                    return false;
+                }
+            }
+
             var rule = ControlRemappingRules.Rules[control];
                         
             if (binding.Type == InputTypes.Button && !rule.AllowButton)
@@ -113,6 +128,7 @@ namespace UAV_Assistive_Operation.Services
                 Type = InputTypes.Axis,
                 Index = binding.Index,
                 Direction = -binding.Direction,
+                Polarity = binding.Polarity,
             };
         }
     }

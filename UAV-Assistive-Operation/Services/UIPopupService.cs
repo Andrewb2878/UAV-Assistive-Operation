@@ -12,6 +12,8 @@ namespace UAV_Assistive_Operation.Services
         private ContentDialog _controllerRemap;
         private ContentDialog _aircraftRequired;
 
+        private bool _allowClose = false;
+
 
         public void RegisterPopups(ContentDialog controllerRequired, ContentDialog controllerRemap,
                                      ContentDialog uavRequired)
@@ -19,6 +21,18 @@ namespace UAV_Assistive_Operation.Services
             _controllerRequired = controllerRequired;
             _controllerRemap = controllerRemap;
             _aircraftRequired = uavRequired;
+
+            _controllerRequired.Closing += OnPopupClosing;
+            _controllerRemap.Closing += OnPopupClosing;
+            _aircraftRequired.Closing += OnPopupClosing;
+        }
+
+        private void OnPopupClosing(ContentDialog sender, ContentDialogClosingEventArgs args)
+        {
+            if (!_allowClose)
+            {
+                args.Cancel = true;
+            }
         }
 
         public async void ShowPopup(UIPopups popup)
@@ -28,6 +42,8 @@ namespace UAV_Assistive_Operation.Services
 
             await HidePopup();
             _currentPopup = popup;
+            _allowClose = false;
+
             await App.RunOnUIThread(() =>
             {
                 GetPopup(popup)?.ShowAsync();
@@ -38,10 +54,17 @@ namespace UAV_Assistive_Operation.Services
         {
             await App.RunOnUIThread(() =>
             {
-                GetPopup(_currentPopup)?.Hide();
+                var popup = GetPopup(_currentPopup);
+                if (popup != null)
+                {
+                    _allowClose = true;
+                    popup.Hide();
+                }                
                 _currentPopup = UIPopups.None;
+                _allowClose = false;
             });
         }
+
 
         private ContentDialog GetPopup(UIPopups popup)
         {

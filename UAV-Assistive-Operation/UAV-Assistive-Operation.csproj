@@ -120,19 +120,23 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Configuration\ControlRemappingRules.cs" />
+    <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\EventTypeToColorConverter.cs" />
+    <Compile Include="Converters\StringToVisibilityConverter.cs" />
     <Compile Include="Enums\ApplicationControls.cs" />
     <Compile Include="Enums\AxisPolarity.cs" />
     <Compile Include="Enums\InputTypes.cs" />
     <Compile Include="Enums\LogEventType.cs" />
     <Compile Include="Enums\MapInitResult.cs" />
     <Compile Include="Enums\UIPopups.cs" />
+    <Compile Include="Helpers\GetDisplayName.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\ActiveAlertModel.cs" />
     <Compile Include="Models\AltitudeTelemetryModel.cs" />
     <Compile Include="Models\BatteryTelemetryModel.cs" />
+    <Compile Include="Models\ControlRemapRowViewModel.cs" />
     <Compile Include="Models\ControlRulesModel.cs" />
     <Compile Include="Models\FlightModeTelemetryModel.cs" />
     <Compile Include="Models\GPSStrengthTelemetryModel.cs" />
