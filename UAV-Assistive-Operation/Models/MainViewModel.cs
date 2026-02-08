@@ -34,10 +34,15 @@ namespace UAV_Assistive_Operation.Models
 
         public bool AdvanceToNext()
         {
-            if (_currentRemapIndex >= RemapRows.Count - 1)
+            int nextIndex = _currentRemapIndex + 1;
+            
+            while (nextIndex < RemapRows.Count && RemapRows[nextIndex].AssignedInput != ControlRemapRowViewModel.DefaultWaitingText)
+                nextIndex++;
+
+            if (nextIndex >= RemapRows.Count)
                 return false;
 
-            _currentRemapIndex++;
+            _currentRemapIndex = nextIndex;
             HighlightCurrentRow();
             return true;
         }

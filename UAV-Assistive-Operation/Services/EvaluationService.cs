@@ -16,7 +16,7 @@ namespace UAV_Assistive_Operation.Services
         private bool _connection;
         private bool _controllerConnection = false;
         private bool _flying;
-        private bool _gpsSufficent;
+        private bool _gpsSufficient;
 
 
         public EvaluationService(
@@ -43,8 +43,8 @@ namespace UAV_Assistive_Operation.Services
             _flightDataService.MotorStartFailureChanged += MotorStartFailureChanged;
             _flightDataService.WindWarningChanged += WindWarningChanged;
 
-            _controllerService.RawControllerConnected += ControllerConnected;
-            _controllerService.RawControllerDisconnected += ControllerDisconnected;
+            _controllerService.GamepadConnected += ControllerConnected;
+            _controllerService.GamepadDisconnected += ControllerDisconnected;
 
             EvaluateFlightStatus();
             EvaluateControllerDisconnection();
@@ -75,7 +75,7 @@ namespace UAV_Assistive_Operation.Services
             if (args.PropertyName != nameof(GPSStrengthTelemetryModel.SufficientForFlight))
                 return;
 
-            _gpsSufficent = _telemetryService.GPS.SufficientForFlight;
+            _gpsSufficient = _telemetryService.GPS.SufficientForFlight;
             EvaluateFlightStatus();
         }
 
@@ -100,7 +100,7 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Controller alerts
-        private void ControllerConnected(RawGameController controller)
+        private void ControllerConnected(Gamepad gamepad)
         {
             _controllerConnection = true;
             EvaluateControllerDisconnection();
@@ -328,7 +328,7 @@ namespace UAV_Assistive_Operation.Services
             {
                 _alertService.FlightStatus("In-Flight"); return;
             }
-            if (_gpsSufficent)
+            if (_gpsSufficient)
             {
                 _alertService.FlightStatus("Ready to Takeoff");
             }

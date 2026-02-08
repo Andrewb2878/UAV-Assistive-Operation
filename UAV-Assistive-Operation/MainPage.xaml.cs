@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
-using UAV_Assistive_Operation.Configuration;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
 using UAV_Assistive_Operation.Services;
 using Windows.Gaming.Input;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -27,10 +26,7 @@ namespace UAV_Assistive_Operation
         private bool _listeningForRemap = false;
         private DateTime _lastAssignmentTime = DateTime.MinValue;
         private const int AssignmentCooldownMs = 500;
-
-        private bool[] _lastButtons;
-        private double[] _lastAxes;
-        private GameControllerSwitchPosition[] _lastSwitches;
+        private GamepadReading? _lastReading;
 
         private bool _mapServiceAvailable = false;
 
@@ -58,7 +54,7 @@ namespace UAV_Assistive_Operation
             MapView.NavigationCompleted += MapView_NavigationCompleted;
             MapView.NavigationFailed += MapView_NavigationFailed;
 
-            App.ControllerService.RawControllerConnected += RawControllerConnected;
+            App.ControllerService.GamepadConnected += _ => EvaluatePopupState();
             App.DJIConnectionService.AircraftConnected += AircraftConnected;
 
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
@@ -92,10 +88,10 @@ namespace UAV_Assistive_Operation
                 _popupService.ShowPopup(UIPopups.ControllerRemapping);
                 ShowRemapping();
             }
-            else if (!IsAircraftConnected)
+            /*else if (!IsAircraftConnected)
             {
                 _popupService.ShowPopup(UIPopups.AircraftRequired);
-            }
+            }*/
             else
             {
                 _popupService.ShowPopup(UIPopups.None);
@@ -106,7 +102,9 @@ namespace UAV_Assistive_Operation
         private void ShowRemapping()
         {
             _listeningForRemap = true;
-            App.ControllerService.RawControllerUpdated += RawControllerUpdated;
+            _lastReading = null;
+
+            App.ControllerService.GamepadUpdated += GamepadUpdated;
         }
 
         private void UpdateScrollPosition()
@@ -164,22 +162,16 @@ namespace UAV_Assistive_Operation
 
 
         //Controller methods
-        private void RawControllerConnected(RawGameController controller)
+        private void GamepadUpdated(GamepadReading reading)
         {
-            EvaluatePopupState();
-        }
 
-        private void RawControllerUpdated(bool[] buttons, GameControllerSwitchPosition[] switches, double[] axes)
-        {
             if (!_listeningForRemap)
                 return;
 
             //Cooldown timer
             if ((DateTime.Now - _lastAssignmentTime).TotalMilliseconds < AssignmentCooldownMs)
             {
-                _lastButtons = (bool[])buttons.Clone();
-                _lastSwitches = (GameControllerSwitchPosition[])switches.Clone();
-                _lastAxes = (double[])axes.Clone();
+                _lastReading = reading;
                 return;
             }
 
@@ -187,100 +179,109 @@ namespace UAV_Assistive_Operation
             if (row == null)
                 return;
 
-            if (_lastButtons != null)
+            if (_lastReading.HasValue)
             {
-                for (int index = 0; index < buttons.Length; index++)
-                {
-                    if (buttons[index] && !_lastButtons[index])
-                    {
-                        AssignInput(row, new InputBindingModel
-                        {
-                            Type = InputTypes.Button,
-                            Index = index
-                        });
-                        return;
-                    }
-                }
-            }
+                var last = _lastReading.Value;
 
-            if (_lastSwitches != null)
-            {
-                for (int index = 0; index< switches.Length; index++)
-                {
-                    if (switches[index] != GameControllerSwitchPosition.Center &&
-                        switches[index] != _lastSwitches[index])
-                    {
-                        AssignInput(row, new InputBindingModel
-                        {
-                            Type = InputTypes.Switch,
-                            Index = index
-                        });
-                        return;
-                    }
-                }
-            }
+                //Buttons
+                DetectButton(GamepadButtons.A, reading, last, row, 0);
+                DetectButton(GamepadButtons.B, reading, last, row, 1);
+                DetectButton(GamepadButtons.X, reading, last, row, 2);
+                DetectButton(GamepadButtons.Y, reading, last, row, 3);
+                DetectButton(GamepadButtons.LeftShoulder, reading, last, row, 4);
+                DetectButton(GamepadButtons.RightShoulder, reading, last, row, 5);
+                DetectButton(GamepadButtons.DPadLeft, reading, last, row, 6);
+                DetectButton(GamepadButtons.DPadUp, reading, last, row, 7);
+                DetectButton(GamepadButtons.DPadRight, reading, last, row, 8);
+                DetectButton(GamepadButtons.DPadDown, reading, last, row, 9);
+                DetectButton(GamepadButtons.View, reading, last, row, 10);
+                DetectButton(GamepadButtons.Menu, reading, last, row, 11);
+                DetectButton(GamepadButtons.Paddle1, reading, last, row, 12);
+                DetectButton(GamepadButtons.Paddle2, reading, last, row, 13);
+                DetectButton(GamepadButtons.Paddle3, reading, last, row, 14);
+                DetectButton(GamepadButtons.Paddle4, reading, last, row, 15);
 
-            if (_lastAxes != null)
-            {
-                for (int index = 0; index < axes.Length; index++)
-                {
-                    double delta = axes[index] - _lastAxes[index];
-                    if (Math.Abs(delta) > 0.3)
-                    {
-                        AssignInput(row, CreateAxisBinding(index, axes[index], _lastAxes[index], row.Controls));
-                        return;
-                    }
-                }
+                //Triggers
+                DetectTrigger(reading.LeftTrigger, last.LeftTrigger, row, 0);
+                DetectTrigger(reading.RightTrigger, last.RightTrigger, row, 1);
+
+                //Joysticks
+                DetectAxis(reading.LeftThumbstickX, last.LeftThumbstickX, row, 2);
+                DetectAxis(reading.LeftThumbstickY, last.LeftThumbstickY, row, 3);
+                DetectAxis(reading.RightThumbstickX, last.RightThumbstickX, row, 4);
+                DetectAxis(reading.RightThumbstickY, last.RightThumbstickY, row, 5);
             }
-            _lastButtons = (bool[])buttons.Clone();
-            _lastSwitches = (GameControllerSwitchPosition[])switches.Clone();
-            _lastAxes = (double[])axes.Clone();
+            _lastReading = reading;
         }
 
-        private InputBindingModel CreateAxisBinding(int index, double currentValue, double restingValue, ApplicationControls control)
+        private void DetectButton(GamepadButtons button, GamepadReading current, GamepadReading last,
+            ControlRemapRowViewModel row, int index)
         {
-            var rule = ControlRemappingRules.Rules[control];
-
-            //Checking control rules to differentiate between joystick and trigger
-            if (rule.AllowBipolarAxis && !rule.AllowUnipolarAxis)
-                return BuildBinding(index, currentValue, AxisPolarity.Bipolar);
-
-            if (rule.AllowUnipolarAxis && !rule.AllowBipolarAxis)
-                return BuildBinding(index, currentValue, AxisPolarity.Unipolar);
-
-            //Additional checks
-            if (currentValue < -0.2 || restingValue < -0.2)
-                return BuildBinding(index, currentValue, AxisPolarity.Bipolar);
-
-            bool hasDrift = Math.Abs(restingValue) > 0.0001 && Math.Abs(currentValue) < 0.2;
-            if (hasDrift)
-                return BuildBinding(index, currentValue, AxisPolarity.Bipolar);
-
-            if (rule.AutoCreateOpposite)
-                return BuildBinding(index, currentValue, AxisPolarity.Bipolar);
-
-            return BuildBinding(index, currentValue, AxisPolarity.Unipolar);
+            if (current.Buttons.HasFlag(button) && !last.Buttons.HasFlag(button))
+            {
+                AssignInput(row, new InputBindingModel
+                {
+                    Type = InputTypes.Button,
+                    Index = index
+                });
+            }
         }
 
-        private InputBindingModel BuildBinding(int index, double value, AxisPolarity polarity)
+        private void DetectTrigger(double current, double last, ControlRemapRowViewModel row, int index)
         {
-            return new InputBindingModel
+            if (current > 0.7 && last < 0.1)
             {
-                Type = InputTypes.Axis,
-                Index = index,
-                Polarity = polarity,
-                Direction = value >= 0 ? 1 : -1,
-            };
+                AssignInput(row, new InputBindingModel
+                {
+                    Type = InputTypes.Axis,
+                    Index = index,
+                    Polarity = AxisPolarity.Unipolar,
+                    Direction = 1
+                });
+            }
+        }
+
+        private void DetectAxis(double current, double last, ControlRemapRowViewModel row, int index)
+        {
+            double delta = Math.Abs(current - last);
+
+            if (delta > 0.5)
+            {
+                AssignInput(row, new InputBindingModel
+                {
+                    Type = InputTypes.Axis,
+                    Index = index,
+                    Polarity = AxisPolarity.Bipolar,
+                    Direction = current >= 0 ? 1 : -1
+                });
+            }
         }
 
         private void AssignInput(ControlRemapRowViewModel row, InputBindingModel binding) 
         {
-            if (_remappingService.TryAssignBinding(row.Controls, binding, out string error))
+            if (_remappingService.TryAssignBinding(row.Controls, binding, out string error, out ApplicationControls? autoAssigned))
             {
                 row.AssignedInput = DescribeBinding(binding);
                 row.Error = null;
-
                 _lastAssignmentTime = DateTime.Now;
+
+                if (autoAssigned.HasValue)
+                {
+                    var autoRow = ViewModel.RemapRows.FirstOrDefault(r => r.Controls == autoAssigned.Value);
+                    if (autoRow != null)
+                    {
+                        var oppositeBindingDescription = new InputBindingModel
+                        {
+                            Type = binding.Type,
+                            Index = binding.Index,
+                            Polarity = binding.Polarity,
+                            Direction = -binding.Direction,
+                        };
+
+                        autoRow.AssignedInput = DescribeBinding(oppositeBindingDescription);
+                        autoRow.Error = null;
+                    }
+                }
 
                 if (ViewModel.AdvanceToNext())
                 {
@@ -323,7 +324,7 @@ namespace UAV_Assistive_Operation
         private void FinishRemapping()
         {
             _listeningForRemap = false;
-            App.ControllerService.RawControllerUpdated -= RawControllerUpdated;
+            App.ControllerService.GamepadUpdated -= GamepadUpdated;
 
             EvaluatePopupState();
         }

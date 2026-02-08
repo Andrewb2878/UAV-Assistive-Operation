@@ -7,7 +7,6 @@ namespace UAV_Assistive_Operation.Services
     public class ControllerService
     {
         public bool IsControllerConnected { get; private set; }
-        public RawGameController RawController { get; private set; }
 
 
         private Gamepad _gamepad;
@@ -15,22 +14,16 @@ namespace UAV_Assistive_Operation.Services
 
         //Input events for services to subscribe to
         public event Action<GamepadReading> GamepadUpdated;
-        public event Action<bool[], GameControllerSwitchPosition[], double[]> RawControllerUpdated;
 
         //Connection state events for services to subscribe to
         public event Action<Gamepad> GamepadConnected;
         public event Action GamepadDisconnected;
-        public event Action<RawGameController> RawControllerConnected;
-        public event Action RawControllerDisconnected;
 
 
         public void Initialize()
         {
             Gamepad.GamepadAdded += GamepadAdded;
             Gamepad.GamepadRemoved += GamepadRemoved;
-
-            RawGameController.RawGameControllerAdded += RawControllerAdded;
-            RawGameController.RawGameControllerRemoved += RawControllerRemoved;
         }
 
 
@@ -43,7 +36,7 @@ namespace UAV_Assistive_Operation.Services
             {
                 Interval = TimeSpan.FromMilliseconds(20)
             };
-            _inputTimer.Tick += Instance_InputUpdate;
+            _inputTimer.Tick += InputUpdate;
             _inputTimer.Start();
         }
 
@@ -51,6 +44,8 @@ namespace UAV_Assistive_Operation.Services
         private void GamepadAdded(object sender, Gamepad gamepad)
         {
             _gamepad = gamepad;
+            IsControllerConnected = true;
+            EventLogService.Instance.Log(Enums.LogEventType.Connection, "Controller connected");
             GamepadConnected?.Invoke(gamepad);
         }
 
@@ -60,46 +55,16 @@ namespace UAV_Assistive_Operation.Services
                 return;
             
             _gamepad = null;
+            IsControllerConnected = false;
+            EventLogService.Instance.Log(Enums.LogEventType.Warning, "Controller disconnected");
             GamepadDisconnected?.Invoke();
         }
 
-        //Raw controller added/removed
-        private void RawControllerAdded(object sender, RawGameController controller)
-        {
-            RawController = controller;
-            IsControllerConnected = true;
-
-            EventLogService.Instance.Log(Enums.LogEventType.Connection, "Controller connected");
-            RawControllerConnected?.Invoke(controller);
-        }
-
-        private void RawControllerRemoved(object sender, RawGameController controller)
-        {
-            if (RawController != controller)
-                return;
-
-            RawController = null;
-            IsControllerConnected = false;
-
-            EventLogService.Instance.Log(Enums.LogEventType.Warning, "Controller disconnected");
-            RawControllerDisconnected?.Invoke();
-        }
-
-        private void Instance_InputUpdate(object sender, object gamepad)
+        private void InputUpdate(object sender, object gamepad)
         {
             if (_gamepad != null)
             {
                 GamepadUpdated?.Invoke(_gamepad.GetCurrentReading());
-            }
-
-            if (RawController != null)
-            {
-                var buttons = new bool[RawController.ButtonCount];
-                var switches = new GameControllerSwitchPosition[RawController.SwitchCount];
-                var axes = new double[RawController.AxisCount];
-
-                RawController.GetCurrentReading(buttons, switches, axes);
-                RawControllerUpdated?.Invoke(buttons, switches, axes);
             }
         } 
     }

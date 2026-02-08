@@ -58,9 +58,10 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Configurating controller inputs
-        public bool TryAssignBinding(ApplicationControls control, InputBindingModel binding, out string error)
+        public bool TryAssignBinding(ApplicationControls control, InputBindingModel binding, out string error, out ApplicationControls? autoAssignedControl)
         {
             error = null;
+            autoAssignedControl = null;
 
             //Ensures against multiple controls assigned to the same input
             foreach (var existingEntry in _binding)
@@ -96,14 +97,14 @@ namespace UAV_Assistive_Operation.Services
             if (rule.AutoCreateOpposite && (binding.Type == InputTypes.Axis) &&
                 (binding.Polarity == AxisPolarity.Bipolar))
             {
-                AssignOpposite(control, binding);
+                autoAssignedControl = AssignOpposite(control, binding);
             }
 
             return true;
         }
 
         //Automatically assigns opposite controls for allowed axis inputs
-        private void AssignOpposite(ApplicationControls control, InputBindingModel binding)
+        private ApplicationControls? AssignOpposite(ApplicationControls control, InputBindingModel binding)
         {
             ApplicationControls? opposite;
             switch (control)
@@ -121,7 +122,7 @@ namespace UAV_Assistive_Operation.Services
             }
 
             if (!opposite.HasValue)
-                return;
+                return null;
 
             _binding[opposite.Value] = new InputBindingModel
             {
@@ -130,6 +131,8 @@ namespace UAV_Assistive_Operation.Services
                 Direction = -binding.Direction,
                 Polarity = binding.Polarity,
             };
+
+            return opposite;
         }
     }
 }

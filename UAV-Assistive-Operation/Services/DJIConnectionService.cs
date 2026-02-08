@@ -62,7 +62,7 @@ namespace UAV_Assistive_Operation.Services
             DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0).ConnectionChanged += FlightControllerConnectionChanged;
         }
 
-        //Aircraft connection managment
+        //Aircraft connection management
         private void ProductTypeChanged(object sender, ProductTypeMsg? value)
         {
             _productPresent = value != null && value.Value.value != ProductType.UNRECOGNIZED;

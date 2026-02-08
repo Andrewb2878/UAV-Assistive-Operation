@@ -7,6 +7,8 @@ namespace UAV_Assistive_Operation.Models
 {
     public class ControlRemapRowViewModel : INotifyPropertyChanged
     {
+        public const string DefaultWaitingText = "Waiting for input...";
+
         public ApplicationControls Controls { get; }
 
         public string DisplayName => Controls.GetDisplayName();
@@ -47,7 +49,7 @@ namespace UAV_Assistive_Operation.Models
         public ControlRemapRowViewModel(ApplicationControls controls)
         {
             Controls = controls;
-            AssignedInput = "Waiting for input...";
+            AssignedInput = DefaultWaitingText;
         }
 
 

@@ -14,7 +14,7 @@ namespace UAV_Assistive_Operation.Services
         public event Action<double, double> UavLocationUpdated;
         public event Action<double> UAVHeadingUpdated;
 
-        //EvaluationServices relevant events for servies to subscribe to
+        //EvaluationServices relevant events for services to subscribe to
         public event Action<bool> FlyingChanged;
         public event Action<bool> SeriousBatteryChanged;
         public event Action<bool> LowBatteryChanged;
