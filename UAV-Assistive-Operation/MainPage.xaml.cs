@@ -88,10 +88,10 @@ namespace UAV_Assistive_Operation
                 _popupService.ShowPopup(UIPopups.ControllerRemapping);
                 ShowRemapping();
             }
-            /*else if (!IsAircraftConnected)
+            else if (!IsAircraftConnected)
             {
                 _popupService.ShowPopup(UIPopups.AircraftRequired);
-            }*/
+            }
             else
             {
                 _popupService.ShowPopup(UIPopups.None);
@@ -121,6 +121,12 @@ namespace UAV_Assistive_Operation
 
                 RemapScrollViewer.ChangeView(null, position.Y - 50, null);
             }
+        }
+
+        private void ShowCompletionProgress()
+        {
+            RemapProgressText.Visibility = Visibility.Visible;
+            RemapProgressBar.Visibility = Visibility.Visible;
         }
 
 
@@ -289,7 +295,7 @@ namespace UAV_Assistive_Operation
                 }
                 else
                 {
-                    FinishRemapping();
+                    StartCompletionSequenceAsync();
                 }
             }
             else
@@ -321,10 +327,14 @@ namespace UAV_Assistive_Operation
             };
         }
 
-        private void FinishRemapping()
+        private async void StartCompletionSequenceAsync()
         {
+            ShowCompletionProgress();
+
             _listeningForRemap = false;
             App.ControllerService.GamepadUpdated -= GamepadUpdated;
+
+            await Task.Delay(5000);
 
             EvaluatePopupState();
         }
