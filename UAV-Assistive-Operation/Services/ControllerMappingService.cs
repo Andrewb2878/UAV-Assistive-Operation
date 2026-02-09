@@ -157,5 +157,31 @@ namespace UAV_Assistive_Operation.Services
 
             return opposite;
         }
+
+
+        public void DisplayBindings()
+        {
+            EventLogService.Instance.Log(LogEventType.Info, "Control bindings:");
+            foreach (var input in _binding)
+            {
+                var key = input.Key;
+                var inputType = input.Value.Type;
+                var inputIndex = input.Value.Index;
+                var inputPolarity = input.Value.Polarity;
+                var inputDirection = input.Value.Direction;
+
+                if (inputType == InputTypes.Axis)
+                {
+                    EventLogService.Instance.Log(LogEventType.Info, $"Control: {key}.. T:{inputType}.." +
+                    $" I:{inputIndex}.. P:{inputPolarity}.. D:{inputDirection}");
+                }
+                else
+                {
+                    EventLogService.Instance.Log(LogEventType.Info, $"Control: {key}.. T:{inputType}.." +
+                    $" I:{inputIndex}");
+                }
+                
+            }
+        }
     }
 }

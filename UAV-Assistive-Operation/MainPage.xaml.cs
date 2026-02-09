@@ -39,7 +39,7 @@ namespace UAV_Assistive_Operation
 
             //Service initialization
             _mappingService = new ControllerMappingService();
-            _remapInputService = new ControllerRemapInputService();
+            _remapInputService = new ControllerRemapInputService(_mappingService);
             _mapService = new MapService(MapView);
             _popupService = new UIPopupService();
             _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);

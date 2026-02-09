@@ -7,6 +7,8 @@ namespace UAV_Assistive_Operation.Services
 {
     public class ControllerRemapInputService
     {
+        private readonly ControllerMappingService _mappingService;
+
         private const int AssignmentCooldownMs = 500;
         private const double TriggerThreshold = 0.7;
         private const double AxisDeadZone = 0.5;
@@ -37,8 +39,15 @@ namespace UAV_Assistive_Operation.Services
 
         public void Stop() 
         {
+            //_mappingService.DisplayBindings();            - Used to check the stored control bindings
             _listeningForRemap = false;
             App.ControllerService.GamepadUpdated -= GamepadUpdated;
+        }
+
+
+        public ControllerRemapInputService(ControllerMappingService mappingService)
+        {
+            _mappingService = mappingService;
         }
 
 
