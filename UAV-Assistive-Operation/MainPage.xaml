@@ -73,7 +73,7 @@
                     VerticalScrollMode="Disabled"
                     VerticalScrollBarVisibility="Hidden">
                     
-                    <ItemsControl x:Name="RemapItemsControl" ItemsSource="{x:Bind ViewModel.RemapRows, Mode=OneWay}">
+                    <ItemsControl x:Name="RemapItemsControl" ItemsSource="{x:Bind ViewModel.ControllerConfiguration.RemapRows, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
 

@@ -24,8 +24,9 @@ namespace UAV_Assistive_Operation
 
         //State
         private bool _mapServiceAvailable = false;
+        public MainViewModel ViewModel { get; }
 
-        public MainViewModel ViewModel { get; } = new MainViewModel();
+
         private bool IsControllerConnected => App.ControllerService.IsControllerConnected;
         private bool IsControllerRemapped => _mappingService.IsFullyRemapped;
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
@@ -35,19 +36,32 @@ namespace UAV_Assistive_Operation
         public MainPage()
         {
             InitializeComponent();
-            DataContext = ViewModel;
-            Loaded += MainPage_Loaded;
 
-            //Services
+            //Service initialization
+            _mappingService = new ControllerMappingService();
             _remapInputService = new ControllerRemapInputService();
-
+            _mapService = new MapService(MapView);
             _popupService = new UIPopupService();
             _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);
 
-            _mappingService = new ControllerMappingService();
-            _mapService = new MapService(MapView);
 
-            //Subscriptions
+            //View model initialization
+            ViewModel = new MainViewModel(_mappingService);
+            DataContext = ViewModel;
+
+
+            //Setup subscriptions
+            RegisterEvents();
+
+
+            _ = InitializeMapAsync();
+        }
+
+        
+        private void RegisterEvents()
+        {
+            Loaded += MainPage_Loaded;
+
             MapView.NavigationCompleted += MapView_NavigationCompleted;
             MapView.NavigationFailed += MapView_NavigationFailed;
 
@@ -58,12 +72,11 @@ namespace UAV_Assistive_Operation
             {
                 await _mapService.UpdateUavLocation(lat, lon);
             };
+
             App.DJIFlightDataService.UAVHeadingUpdated += async heading =>
             {
                 await _mapService.UpdateUavHeading(heading);
             };
-
-            _ = InitializeMapAsync();
         }
 
 
@@ -98,13 +111,27 @@ namespace UAV_Assistive_Operation
 
         private void ShowRemapping()
         {
-            _remapInputService.InputDetected += AssignInput;
+            _remapInputService.InputDetected += InputDetected;
             _remapInputService.Start();
+        }
+
+        private void InputDetected(InputBindingModel binding)
+        {
+            bool isComplete = ViewModel.ControllerConfiguration.HandleInput(binding);
+
+            if (isComplete)
+            {
+                StartCompletionSequenceAsync();
+            }
+            else
+            {
+                UpdateScrollPosition();
+            }
         }
 
         private void UpdateScrollPosition()
         {
-            var currentRow = ViewModel.CurrentRow;
+            var currentRow = ViewModel.ControllerConfiguration.CurrentRow;
             if (currentRow == null)
                 return;
 
@@ -115,6 +142,23 @@ namespace UAV_Assistive_Operation
                 var position = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
 
                 RemapScrollViewer.ChangeView(null, position.Y - 50, null);
+            }
+        }
+
+        private async void StartCompletionSequenceAsync()
+        {
+            try
+            {
+                ShowCompletionProgress();
+                _remapInputService.Stop();
+
+                await Task.Delay(5000);
+
+                EvaluatePopupState();
+            }
+            catch (Exception ex)
+            {
+                EventLogService.Instance.Log(LogEventType.Error, $"Controller configuration failed: {ex.Message}");
             }
         }
 
@@ -159,69 +203,6 @@ namespace UAV_Assistive_Operation
        private void AircraftConnected()
         {
             EvaluatePopupState();
-        }
-
-
-        //Controller methods
-        private void AssignInput(InputBindingModel binding) 
-        {
-            var row = ViewModel.CurrentRow;
-            if (row == null)
-                return;
-
-            if (_mappingService.TryAssignBinding(row.Controls, binding, out string error, out ApplicationControls? autoAssigned))
-            {
-                row.AssignedInput = _mappingService.DescribeBinding(binding);
-                row.Error = null;
-
-                if (autoAssigned.HasValue)
-                {
-                    var autoRow = ViewModel.RemapRows.FirstOrDefault(r => r.Controls == autoAssigned.Value);
-                    if (autoRow != null)
-                    {
-                        var oppositeBindingDescription = new InputBindingModel
-                        {
-                            Type = binding.Type,
-                            Index = binding.Index,
-                            Polarity = binding.Polarity,
-                            Direction = -binding.Direction,
-                        };
-
-                        autoRow.AssignedInput = _mappingService.DescribeBinding(oppositeBindingDescription);
-                        autoRow.Error = null;
-                    }
-                }
-
-                if (ViewModel.AdvanceToNext())
-                {
-                    UpdateScrollPosition();
-                }
-                else
-                {
-                    StartCompletionSequenceAsync();
-                }
-            }
-            else
-            {
-                row.Error = error;
-            }
-        }
-
-        private async void StartCompletionSequenceAsync()
-        {
-            try
-            {
-                ShowCompletionProgress();
-                _remapInputService.Stop();
-
-                await Task.Delay(5000);
-
-                EvaluatePopupState();
-            }
-            catch (Exception ex)
-            {
-                EventLogService.Instance.Log(LogEventType.Error, $"Controller configuration failed: {ex.Message}");
-            }
         }
     }
 }
