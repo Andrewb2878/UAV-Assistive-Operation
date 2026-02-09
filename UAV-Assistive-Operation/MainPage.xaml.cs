@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
 using UAV_Assistive_Operation.Services;
-using Windows.Gaming.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -20,19 +19,15 @@ namespace UAV_Assistive_Operation
         //Services
         private readonly UIPopupService _popupService;
         private readonly MapService _mapService;
-        private readonly ControllerRemappingService _remappingService;
+        private readonly ControllerMappingService _mappingService;
+        private readonly ControllerRemapInputService _remapInputService;
 
         //State
-        private bool _listeningForRemap = false;
-        private DateTime _lastAssignmentTime = DateTime.MinValue;
-        private const int AssignmentCooldownMs = 500;
-        private GamepadReading? _lastReading;
-
         private bool _mapServiceAvailable = false;
 
         public MainViewModel ViewModel { get; } = new MainViewModel();
         private bool IsControllerConnected => App.ControllerService.IsControllerConnected;
-        private bool IsControllerRemapped => _remappingService.IsFullyRemapped;
+        private bool IsControllerRemapped => _mappingService.IsFullyRemapped;
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
         
 
@@ -40,14 +35,16 @@ namespace UAV_Assistive_Operation
         public MainPage()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = ViewModel;
             Loaded += MainPage_Loaded;
 
             //Services
+            _remapInputService = new ControllerRemapInputService();
+
             _popupService = new UIPopupService();
             _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);
 
-            _remappingService = new ControllerRemappingService();
+            _mappingService = new ControllerMappingService();
             _mapService = new MapService(MapView);
 
             //Subscriptions
@@ -101,10 +98,8 @@ namespace UAV_Assistive_Operation
 
         private void ShowRemapping()
         {
-            _listeningForRemap = true;
-            _lastReading = null;
-
-            App.ControllerService.GamepadUpdated += GamepadUpdated;
+            _remapInputService.InputDetected += AssignInput;
+            _remapInputService.Start();
         }
 
         private void UpdateScrollPosition()
@@ -168,108 +163,16 @@ namespace UAV_Assistive_Operation
 
 
         //Controller methods
-        private void GamepadUpdated(GamepadReading reading)
+        private void AssignInput(InputBindingModel binding) 
         {
-
-            if (!_listeningForRemap)
-                return;
-
-            //Cooldown timer
-            if ((DateTime.Now - _lastAssignmentTime).TotalMilliseconds < AssignmentCooldownMs)
-            {
-                _lastReading = reading;
-                return;
-            }
-
             var row = ViewModel.CurrentRow;
             if (row == null)
                 return;
 
-            if (_lastReading.HasValue)
+            if (_mappingService.TryAssignBinding(row.Controls, binding, out string error, out ApplicationControls? autoAssigned))
             {
-                var last = _lastReading.Value;
-
-                //Buttons
-                DetectButton(GamepadButtons.A, reading, last, row, 0);
-                DetectButton(GamepadButtons.B, reading, last, row, 1);
-                DetectButton(GamepadButtons.X, reading, last, row, 2);
-                DetectButton(GamepadButtons.Y, reading, last, row, 3);
-                DetectButton(GamepadButtons.LeftShoulder, reading, last, row, 4);
-                DetectButton(GamepadButtons.RightShoulder, reading, last, row, 5);
-                DetectButton(GamepadButtons.DPadLeft, reading, last, row, 6);
-                DetectButton(GamepadButtons.DPadUp, reading, last, row, 7);
-                DetectButton(GamepadButtons.DPadRight, reading, last, row, 8);
-                DetectButton(GamepadButtons.DPadDown, reading, last, row, 9);
-                DetectButton(GamepadButtons.View, reading, last, row, 10);
-                DetectButton(GamepadButtons.Menu, reading, last, row, 11);
-                DetectButton(GamepadButtons.Paddle1, reading, last, row, 12);
-                DetectButton(GamepadButtons.Paddle2, reading, last, row, 13);
-                DetectButton(GamepadButtons.Paddle3, reading, last, row, 14);
-                DetectButton(GamepadButtons.Paddle4, reading, last, row, 15);
-
-                //Triggers
-                DetectTrigger(reading.LeftTrigger, last.LeftTrigger, row, 0);
-                DetectTrigger(reading.RightTrigger, last.RightTrigger, row, 1);
-
-                //Joysticks
-                DetectAxis(reading.LeftThumbstickX, last.LeftThumbstickX, row, 2);
-                DetectAxis(reading.LeftThumbstickY, last.LeftThumbstickY, row, 3);
-                DetectAxis(reading.RightThumbstickX, last.RightThumbstickX, row, 4);
-                DetectAxis(reading.RightThumbstickY, last.RightThumbstickY, row, 5);
-            }
-            _lastReading = reading;
-        }
-
-        private void DetectButton(GamepadButtons button, GamepadReading current, GamepadReading last,
-            ControlRemapRowViewModel row, int index)
-        {
-            if (current.Buttons.HasFlag(button) && !last.Buttons.HasFlag(button))
-            {
-                AssignInput(row, new InputBindingModel
-                {
-                    Type = InputTypes.Button,
-                    Index = index
-                });
-            }
-        }
-
-        private void DetectTrigger(double current, double last, ControlRemapRowViewModel row, int index)
-        {
-            if (current > 0.7 && last < 0.1)
-            {
-                AssignInput(row, new InputBindingModel
-                {
-                    Type = InputTypes.Axis,
-                    Index = index,
-                    Polarity = AxisPolarity.Unipolar,
-                    Direction = 1
-                });
-            }
-        }
-
-        private void DetectAxis(double current, double last, ControlRemapRowViewModel row, int index)
-        {
-            double delta = Math.Abs(current - last);
-
-            if (delta > 0.5)
-            {
-                AssignInput(row, new InputBindingModel
-                {
-                    Type = InputTypes.Axis,
-                    Index = index,
-                    Polarity = AxisPolarity.Bipolar,
-                    Direction = current >= 0 ? 1 : -1
-                });
-            }
-        }
-
-        private void AssignInput(ControlRemapRowViewModel row, InputBindingModel binding) 
-        {
-            if (_remappingService.TryAssignBinding(row.Controls, binding, out string error, out ApplicationControls? autoAssigned))
-            {
-                row.AssignedInput = DescribeBinding(binding);
+                row.AssignedInput = _mappingService.DescribeBinding(binding);
                 row.Error = null;
-                _lastAssignmentTime = DateTime.Now;
 
                 if (autoAssigned.HasValue)
                 {
@@ -284,7 +187,7 @@ namespace UAV_Assistive_Operation
                             Direction = -binding.Direction,
                         };
 
-                        autoRow.AssignedInput = DescribeBinding(oppositeBindingDescription);
+                        autoRow.AssignedInput = _mappingService.DescribeBinding(oppositeBindingDescription);
                         autoRow.Error = null;
                     }
                 }
@@ -304,39 +207,21 @@ namespace UAV_Assistive_Operation
             }
         }
 
-        private string DescribeBinding(InputBindingModel binding)
-        {
-            switch (binding.Type) 
-            {
-                case InputTypes.Button:
-                    return $"Button {binding.Index}";
-                case InputTypes.Switch:
-                    return $"Switch {binding.Index}";
-                case InputTypes.Axis:
-                    if (binding.Polarity == AxisPolarity.Unipolar)
-                    {
-                        return $"Trigger {binding.Index}";
-                    }
-                    else
-                    {
-                        return $"Axis {binding.Index} ({(binding.Direction > 0 ? "+" : "-")})";
-                    }
-                default:
-                    return "Unknown";
-
-            };
-        }
-
         private async void StartCompletionSequenceAsync()
         {
-            ShowCompletionProgress();
+            try
+            {
+                ShowCompletionProgress();
+                _remapInputService.Stop();
 
-            _listeningForRemap = false;
-            App.ControllerService.GamepadUpdated -= GamepadUpdated;
+                await Task.Delay(5000);
 
-            await Task.Delay(5000);
-
-            EvaluatePopupState();
+                EvaluatePopupState();
+            }
+            catch (Exception ex)
+            {
+                EventLogService.Instance.Log(LogEventType.Error, $"Controller configuration failed: {ex.Message}");
+            }
         }
     }
 }

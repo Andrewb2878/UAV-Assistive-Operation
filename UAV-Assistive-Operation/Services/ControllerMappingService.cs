@@ -8,7 +8,7 @@ using Windows.Gaming.Input;
 
 namespace UAV_Assistive_Operation.Services
 {
-    public class ControllerRemappingService
+    public class ControllerMappingService
     {
         private readonly Dictionary<ApplicationControls, InputBindingModel> _binding = 
             new Dictionary<ApplicationControls, InputBindingModel>();
@@ -101,6 +101,29 @@ namespace UAV_Assistive_Operation.Services
             }
 
             return true;
+        }
+
+        public string DescribeBinding(InputBindingModel binding)
+        {
+            switch (binding.Type)
+            {
+                case InputTypes.Button:
+                    return $"Button {binding.Index}";
+                case InputTypes.Switch:
+                    return $"Switch {binding.Index}";
+                case InputTypes.Axis:
+                    if (binding.Polarity == AxisPolarity.Unipolar)
+                    {
+                        return $"Trigger {binding.Index}";
+                    }
+                    else
+                    {
+                        return $"Axis {binding.Index} ({(binding.Direction > 0 ? "+" : "-")})";
+                    }
+                default:
+                    return "Unknown";
+
+            };
         }
 
         //Automatically assigns opposite controls for allowed axis inputs

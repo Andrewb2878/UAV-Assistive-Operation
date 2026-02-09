@@ -96,8 +96,6 @@ namespace UAV_Assistive_Operation.Services
 
         private async void EvaluateConnectionState()
         {
-            //EventLogService.Instance.Log(LogEventType.Debug, $"Product present value: {_productPresent}");
-            //EventLogService.Instance.Log(LogEventType.Debug, $"flight controller value: {_flightControllerConnected}");
             bool shouldBeConnected = _productPresent && _flightControllerConnected;
 
             if (shouldBeConnected == IsAircraftConnected)

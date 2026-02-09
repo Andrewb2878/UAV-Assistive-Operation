@@ -150,6 +150,7 @@
                         x:Name="RemapProgressBar"
                         IsIndeterminate="True"
                         Height="6"
+                        Margin="10,0"
                         Visibility="Collapsed" />
                 </StackPanel>
             </Grid>
