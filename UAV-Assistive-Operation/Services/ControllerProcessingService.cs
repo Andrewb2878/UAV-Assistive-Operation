@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
-using Windows.Gaming.Input;
 
 namespace UAV_Assistive_Operation.Services
 {
@@ -22,43 +21,17 @@ namespace UAV_Assistive_Operation.Services
 
         public void Start()
         {
-            App.ControllerService.GamepadUpdated += GamepadUpdated;
+            App.ControllerService.ControllerUpdated += GamepadUpdated;
         }
 
         public void Stop()
         {
-            App.ControllerService.GamepadUpdated -= GamepadUpdated;
+            App.ControllerService.ControllerUpdated -= GamepadUpdated;
         }
 
-        private void GamepadUpdated(GamepadReading reading)
+        private void GamepadUpdated(ControllerStateModel state)
         {
-            bool[] buttons =
-            {
-                reading.Buttons.HasFlag(GamepadButtons.A),
-                reading.Buttons.HasFlag(GamepadButtons.B),
-                reading.Buttons.HasFlag(GamepadButtons.X),
-                reading.Buttons.HasFlag(GamepadButtons.Y),
-                reading.Buttons.HasFlag(GamepadButtons.LeftShoulder),
-                reading.Buttons.HasFlag(GamepadButtons.RightShoulder),
-                reading.Buttons.HasFlag(GamepadButtons.DPadLeft),
-                reading.Buttons.HasFlag(GamepadButtons.DPadUp),
-                reading.Buttons.HasFlag(GamepadButtons.DPadRight),
-                reading.Buttons.HasFlag(GamepadButtons.DPadDown),
-                reading.Buttons.HasFlag(GamepadButtons.View),
-                reading.Buttons.HasFlag(GamepadButtons.Menu),
-            };
-
-            double[] axes =
-            {
-                reading.LeftTrigger,
-                reading.RightTrigger,
-                reading.LeftThumbstickX,
-                reading.LeftThumbstickY,
-                reading.RightThumbstickX,
-                reading.RightThumbstickY,
-            };
-
-            Process(buttons, axes);
+            Process(state.Buttons, state.Axes);
         }
 
 

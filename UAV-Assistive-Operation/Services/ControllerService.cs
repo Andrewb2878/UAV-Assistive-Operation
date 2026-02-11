@@ -1,4 +1,5 @@
 ﻿using System;
+using UAV_Assistive_Operation.Models;
 using Windows.Gaming.Input;
 using Windows.UI.Xaml;
 
@@ -13,11 +14,20 @@ namespace UAV_Assistive_Operation.Services
         private DispatcherTimer _inputTimer;
 
         //Input events for services to subscribe to
-        public event Action<GamepadReading> GamepadUpdated;
+        public event Action<ControllerStateModel> ControllerUpdated;
 
         //Connection state events for services to subscribe to
         public event Action<Gamepad> GamepadConnected;
         public event Action GamepadDisconnected;
+
+        //Defining the list of available buttons
+        private static readonly GamepadButtons[] ButtonsToTrack =
+        {
+            GamepadButtons.A, GamepadButtons.B, GamepadButtons.X, GamepadButtons.Y,
+            GamepadButtons.LeftShoulder, GamepadButtons.RightShoulder,
+            GamepadButtons.DPadLeft, GamepadButtons.DPadUp, GamepadButtons.DPadRight, GamepadButtons.DPadDown,
+            GamepadButtons.View, GamepadButtons.Menu
+        };
 
 
         public void Initialize()
@@ -64,7 +74,30 @@ namespace UAV_Assistive_Operation.Services
         {
             if (_gamepad != null)
             {
-                GamepadUpdated?.Invoke(_gamepad.GetCurrentReading());
+                var reading = _gamepad.GetCurrentReading();
+
+                //Mapping buttons
+                bool[] buttonStates = new bool[ButtonsToTrack.Length];
+                for (int index = 0; index < ButtonsToTrack.Length; index++)
+                    buttonStates[index] = reading.Buttons.HasFlag(ButtonsToTrack[index]);
+
+                //Mapping axes
+                double[] axisStates = new double[]
+                {
+                    reading.LeftTrigger,
+                    reading.RightTrigger,
+                    reading.LeftThumbstickX,
+                    reading.LeftThumbstickY,
+                    reading.RightThumbstickX,
+                    reading.RightThumbstickY,
+                };
+
+                ControllerUpdated?.Invoke(new ControllerStateModel
+                {
+                    Buttons = buttonStates,
+                    Axes = axisStates,
+                    RawReading = reading,
+                });
             }
         } 
     }

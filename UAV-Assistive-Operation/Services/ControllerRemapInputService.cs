@@ -14,34 +14,27 @@ namespace UAV_Assistive_Operation.Services
         private const double AxisDeadZone = 0.5;
 
         private bool _listeningForRemap = false;
+        private ControllerStateModel _lastState;
         private DateTime _lastAssignmentTime = DateTime.MinValue;
-        private GamepadReading? _lastReading;
 
         public event Action<InputBindingModel> InputDetected;
 
-        private static readonly GamepadButtons[] ButtonsToTrack =
-        {
-            GamepadButtons.A, GamepadButtons.B, GamepadButtons.X, GamepadButtons.Y,
-            GamepadButtons.LeftShoulder, GamepadButtons.RightShoulder,
-            GamepadButtons.DPadLeft, GamepadButtons.DPadUp, GamepadButtons.DPadRight, GamepadButtons.DPadDown,
-            GamepadButtons.View, GamepadButtons.Menu
-        };
 
         //Used to manage when to remap controls 
         public void Start()
         {
             _listeningForRemap = true;
-            _lastReading = null;
+            _lastState = null;
             _lastAssignmentTime = DateTime.MinValue;
 
-            App.ControllerService.GamepadUpdated += GamepadUpdated;
+            App.ControllerService.ControllerUpdated += GamepadUpdated;
         }
 
         public void Stop() 
         {
             //_mappingService.DisplayBindings();            - Used to check the stored control bindings
             _listeningForRemap = false;
-            App.ControllerService.GamepadUpdated -= GamepadUpdated;
+            App.ControllerService.ControllerUpdated -= GamepadUpdated;
         }
 
 
@@ -52,79 +45,67 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Controller methods
-        private void GamepadUpdated(GamepadReading reading)
+        private void GamepadUpdated(ControllerStateModel state)
         {
             if (!_listeningForRemap)
                 return;
 
-            //Cooldown timer
-            if ((DateTime.Now - _lastAssignmentTime).TotalMilliseconds < AssignmentCooldownMs)
+            if  (_lastState == null)
             {
-                _lastReading = reading;
+                _lastState = state;
                 return;
             }
 
-            if (_lastReading.HasValue)
+            //Cooldown timer
+            if ((DateTime.Now - _lastAssignmentTime).TotalMilliseconds < AssignmentCooldownMs)
             {
-                var last = _lastReading.Value;
+                _lastState = state;
+                return;
+            }
 
-                //Buttons
-                for (int index = 0; index < ButtonsToTrack.Length; index++)
+            for (int index = 0; index < state.Buttons.Length; index++)
+            {
+                if (state.Buttons[index] && !_lastState.Buttons[index])
+                    DetectedInput(new InputBindingModel
+                    {
+                        Type = InputTypes.Button,
+                        Index = index,
+                    });
+            }
+
+            for (int index = 0; index < state.Axes.Length; index++)
+            {
+                double current = state.Axes[index];
+                double last = _lastState.Axes[index];
+
+                if (index < 2)
                 {
-                    DetectButton(ButtonsToTrack[index], reading, last, index);
+                    if (current > TriggerThreshold && last < 0.1)
+                    {
+                        DetectedInput(new InputBindingModel
+                        {
+                            Type = InputTypes.Axis,
+                            Index = index,
+                            Polarity = AxisPolarity.Unipolar,
+                            Direction = 1
+                        });
+                    }
                 }
-
-                //Triggers
-                DetectTrigger(reading.LeftTrigger, last.LeftTrigger, 0);
-                DetectTrigger(reading.RightTrigger, last.RightTrigger, 1);
-
-                //Joysticks
-                DetectAxis(reading.LeftThumbstickX, last.LeftThumbstickX, 2);
-                DetectAxis(reading.LeftThumbstickY, last.LeftThumbstickY, 3);
-                DetectAxis(reading.RightThumbstickX, last.RightThumbstickX, 4);
-                DetectAxis(reading.RightThumbstickY, last.RightThumbstickY, 5);
-            }
-            _lastReading = reading;
-        }
-
-        private void DetectButton(GamepadButtons button, GamepadReading current, GamepadReading last, int index)
-        {
-            if (current.Buttons.HasFlag(button) && !last.Buttons.HasFlag(button))
-            {
-                DetectedInput(new InputBindingModel
+                else
                 {
-                    Type = InputTypes.Button,
-                    Index = index
-                });
+                    if (Math.Abs(current - last) > AxisDeadZone)
+                    {
+                        DetectedInput(new InputBindingModel
+                        {
+                            Type = InputTypes.Axis,
+                            Index = index,
+                            Polarity = AxisPolarity.Bipolar,
+                            Direction = current >= 0 ? 1 : -1,
+                        });
+                    }
+                }
             }
-        }
-
-        private void DetectTrigger(double current, double last, int index)
-        {
-            if (current > TriggerThreshold && last < 0.1)
-            {
-                DetectedInput(new InputBindingModel
-                {
-                    Type = InputTypes.Axis,
-                    Index = index,
-                    Polarity = AxisPolarity.Unipolar,
-                    Direction = 1
-                });
-            }
-        }
-
-        private void DetectAxis(double current, double last, int index)
-        {
-            if (Math.Abs(current - last) > AxisDeadZone)
-            {
-                DetectedInput(new InputBindingModel
-                {
-                    Type = InputTypes.Axis,
-                    Index = index,
-                    Polarity = AxisPolarity.Bipolar,
-                    Direction = current >= 0 ? 1 : -1
-                });
-            }
+            _lastState = state;
         }
 
         private void DetectedInput(InputBindingModel binding)

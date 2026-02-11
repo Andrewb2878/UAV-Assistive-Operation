@@ -137,6 +137,7 @@
     <Compile Include="Models\AltitudeTelemetryModel.cs" />
     <Compile Include="Models\BatteryTelemetryModel.cs" />
     <Compile Include="Models\ControllerConfigurationViewModel.cs" />
+    <Compile Include="Models\ControllerStateModel.cs" />
     <Compile Include="Models\ControlRemapRowViewModel.cs" />
     <Compile Include="Models\ControlRulesModel.cs" />
     <Compile Include="Models\FlightCommandViewModel.cs" />
