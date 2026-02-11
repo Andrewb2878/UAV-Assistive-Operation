@@ -6,6 +6,7 @@ namespace UAV_Assistive_Operation.Models
     public class MainViewModel
     {
         public ControllerConfigurationViewModel ControllerConfiguration { get; }
+        public FlightCommandViewModel FlightCommand { get; }
 
         public AlertService Alerts => App.AlertService;
         public DJITelemetryService Telemetry => App.DJITelemetryService;
@@ -15,6 +16,7 @@ namespace UAV_Assistive_Operation.Models
         public MainViewModel(ControllerMappingService mappingService)
         {
             ControllerConfiguration = new ControllerConfigurationViewModel(mappingService);
+            FlightCommand = new FlightCommandViewModel();
         }
     }
 }

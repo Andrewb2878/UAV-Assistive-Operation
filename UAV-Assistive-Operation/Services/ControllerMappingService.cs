@@ -4,7 +4,6 @@ using UAV_Assistive_Operation.Configuration;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Helpers;
 using UAV_Assistive_Operation.Models;
-using Windows.Gaming.Input;
 
 namespace UAV_Assistive_Operation.Services
 {
@@ -19,7 +18,7 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Uses _binding to generate real-time control values
-        public Dictionary<ApplicationControls, double> ProcessInput(bool[] buttons, GameControllerSwitchPosition[] switches, double[] axes)
+        public Dictionary<ApplicationControls, double> ProcessInput(bool[] buttons, double[] axes)
         {
             var output = new Dictionary<ApplicationControls, double>();
 
@@ -34,8 +33,6 @@ namespace UAV_Assistive_Operation.Services
                 {
                     case InputTypes.Button:
                         value = buttons[binding.Index] ? 1.0 : 0.0; break;
-                    case InputTypes.Switch:
-                        value = switches[binding.Index] != GameControllerSwitchPosition.Center ? 1.0 : 0.0; break;
                     case InputTypes.Axis:
                         double raw = axes[binding.Index];
                         if (binding.Polarity == AxisPolarity.Bipolar)
@@ -81,8 +78,6 @@ namespace UAV_Assistive_Operation.Services
                         
             if (binding.Type == InputTypes.Button && !rule.AllowButton)
                 error = "Button input not allowed";
-            if (binding.Type == InputTypes.Switch && !rule.AllowSwitch)
-                error = "Switch input not allowed";
             if (binding.Type == InputTypes.Axis && !rule.AllowBipolarAxis)
                 error = "Axis input not allowed";
             if (binding.Polarity == AxisPolarity.Unipolar && !rule.AllowUnipolarAxis)
@@ -109,8 +104,6 @@ namespace UAV_Assistive_Operation.Services
             {
                 case InputTypes.Button:
                     return $"Button {binding.Index}";
-                case InputTypes.Switch:
-                    return $"Switch {binding.Index}";
                 case InputTypes.Axis:
                     if (binding.Polarity == AxisPolarity.Unipolar)
                     {

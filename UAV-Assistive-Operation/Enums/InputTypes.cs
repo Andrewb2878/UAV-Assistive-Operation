@@ -3,7 +3,6 @@
     public enum InputTypes
     {
         Axis,
-        Button,
-        Switch
+        Button
     }
 }

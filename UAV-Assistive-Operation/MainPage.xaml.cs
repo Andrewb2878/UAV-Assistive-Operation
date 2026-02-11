@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
@@ -21,6 +20,7 @@ namespace UAV_Assistive_Operation
         private readonly MapService _mapService;
         private readonly ControllerMappingService _mappingService;
         private readonly ControllerRemapInputService _remapInputService;
+        private readonly ControllerProcessingService _processingService;
 
         //State
         private bool _mapServiceAvailable = false;
@@ -37,17 +37,19 @@ namespace UAV_Assistive_Operation
         {
             InitializeComponent();
 
+
             //Service initialization
             _mappingService = new ControllerMappingService();
             _remapInputService = new ControllerRemapInputService(_mappingService);
-            _mapService = new MapService(MapView);
-            _popupService = new UIPopupService();
-            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);
-
 
             //View model initialization
             ViewModel = new MainViewModel(_mappingService);
             DataContext = ViewModel;
+
+            _processingService = new ControllerProcessingService(_mappingService, ViewModel.FlightCommand);
+            _mapService = new MapService(MapView);
+            _popupService = new UIPopupService();
+            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);
 
 
             //Setup subscriptions
@@ -151,8 +153,10 @@ namespace UAV_Assistive_Operation
             {
                 ShowCompletionProgress();
                 _remapInputService.Stop();
+                _processingService.Start();
 
                 await Task.Delay(5000);
+                EventLogService.Instance.Log(LogEventType.Info, $"Controller configured");
 
                 EvaluatePopupState();
             }

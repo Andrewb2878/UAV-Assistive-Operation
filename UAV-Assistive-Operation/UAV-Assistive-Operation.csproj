@@ -139,6 +139,7 @@
     <Compile Include="Models\ControllerConfigurationViewModel.cs" />
     <Compile Include="Models\ControlRemapRowViewModel.cs" />
     <Compile Include="Models\ControlRulesModel.cs" />
+    <Compile Include="Models\FlightCommandViewModel.cs" />
     <Compile Include="Models\FlightModeTelemetryModel.cs" />
     <Compile Include="Models\GPSStrengthTelemetryModel.cs" />
     <Compile Include="Models\InputBindingModel.cs" />
@@ -146,10 +147,12 @@
     <Compile Include="Models\MainViewModel.cs" />
     <Compile Include="Models\SpeedTelemetryModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ControllerProcessingService.cs" />
     <Compile Include="Services\ControllerRemapInputService.cs" />
     <Compile Include="Services\ControllerMappingService.cs" />
     <Compile Include="Services\ControllerService.cs" />
     <Compile Include="Services\DJIConnectionService.cs" />
+    <Compile Include="Services\DJIFlightControllerService.cs" />
     <Compile Include="Services\DJIFlightDataService.cs" />
     <Compile Include="Services\DJITelemetryService.cs" />
     <Compile Include="Services\EvaluationService.cs" />
