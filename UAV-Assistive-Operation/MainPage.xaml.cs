@@ -24,6 +24,7 @@ namespace UAV_Assistive_Operation
 
         //State
         private bool _mapServiceAvailable = false;
+        private bool _completingConfiguration = false;
         public MainViewModel ViewModel { get; }
 
 
@@ -119,6 +120,9 @@ namespace UAV_Assistive_Operation
 
         private void InputDetected(InputBindingModel binding)
         {
+            if (_completingConfiguration)
+                return;
+
             bool isComplete = ViewModel.ControllerConfiguration.HandleInput(binding);
 
             if (isComplete)
@@ -149,10 +153,12 @@ namespace UAV_Assistive_Operation
 
         private async void StartCompletionSequenceAsync()
         {
+            _completingConfiguration = true;
+
             try
             {
-                ShowCompletionProgress();
                 _remapInputService.Stop();
+                ShowCompletionProgress();
                 _processingService.Start();
 
                 await Task.Delay(5000);
@@ -160,9 +166,10 @@ namespace UAV_Assistive_Operation
 
                 EvaluatePopupState();
             }
-            catch (Exception ex)
+            catch (Exception error)
             {
-                EventLogService.Instance.Log(LogEventType.Error, $"Controller configuration failed: {ex.Message}");
+                EventLogService.Instance.Log(LogEventType.Error, $"Controller configuration failed: {error.Message}");
+                _completingConfiguration = false;
             }
         }
 

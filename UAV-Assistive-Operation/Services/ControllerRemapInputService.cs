@@ -80,7 +80,7 @@ namespace UAV_Assistive_Operation.Services
 
                 if (index < 2)
                 {
-                    if (current > TriggerThreshold && last < 0.1)
+                    if (current > TriggerThreshold)
                     {
                         DetectedInput(new InputBindingModel
                         {
