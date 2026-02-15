@@ -12,13 +12,14 @@ using Windows.UI.Xaml.Navigation;
 namespace UAV_Assistive_Operation
 {
     /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
+    /// Provides application-specific behaviour to supplement the default Application class.
     /// </summary>
     sealed partial class App : Application
     {
         public static DJIConnectionService DJIConnectionService { get; private set; }
         public static DJITelemetryService DJITelemetryService { get; private set; }
         public static DJIFlightDataService DJIFlightDataService { get; private set; }
+        public static DJIFlightControllerService DJIFlightControllerService { get; private set; }
         public static ControllerService ControllerService { get; private set; }
         public static AlertService AlertService { get; internal set; }
         public static EvaluationService EvaluationService { get; private set; }
@@ -82,6 +83,7 @@ namespace UAV_Assistive_Operation
             DJIConnectionService.Initialize();
             DJITelemetryService = new DJITelemetryService();
             DJIFlightDataService = new DJIFlightDataService();
+            DJIFlightControllerService = new DJIFlightControllerService();
             AlertService = new AlertService();
             EvaluationService = new EvaluationService(DJIConnectionService, DJITelemetryService,
                                                         DJIFlightDataService, ControllerService, AlertService);
@@ -89,10 +91,13 @@ namespace UAV_Assistive_Operation
 
             DJIConnectionService.AircraftConnected += DJITelemetryService.AircraftConnected;
             DJIConnectionService.AircraftConnected += DJIFlightDataService.AircraftConnected;
+            DJIConnectionService.AircraftConnected += () => DJIFlightControllerService.AircraftConnected(DJIFlightDataService);
 
             DJIConnectionService.AircraftDisconnected += DJITelemetryService.AircraftDisconnected;
             DJIConnectionService.AircraftDisconnected += DJIFlightDataService.AircraftDisconnected;
+            DJIConnectionService.AircraftDisconnected += DJIFlightControllerService.AircraftDisconnected;
 
+            
             if (e.PrelaunchActivated == false)
             {
                 if (rootFrame.Content == null)

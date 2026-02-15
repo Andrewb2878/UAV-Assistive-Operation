@@ -13,11 +13,6 @@ namespace UAV_Assistive_Operation.Services
         private readonly ControllerService _controllerService;
         private readonly AlertService _alertService;
 
-        private bool _connection;
-        private bool _controllerConnection = false;
-        private bool _flying;
-        private bool _gpsSufficient;
-
 
         public EvaluationService(
             DJIConnectionService connectionService,
@@ -54,19 +49,16 @@ namespace UAV_Assistive_Operation.Services
         //Getting values for flight status
         private void AircraftConnected() 
         {
-            _connection = true;
             EvaluateFlightStatus();
         }
 
         private void AircraftDisconnected()
         {
-            _connection = false;
             EvaluateFlightStatus();
         }
 
         private void FlyingChanged(bool flying)
         {
-            _flying = flying;
             EvaluateFlightStatus();
         }
 
@@ -75,7 +67,6 @@ namespace UAV_Assistive_Operation.Services
             if (args.PropertyName != nameof(GPSStrengthTelemetryModel.SufficientForFlight))
                 return;
 
-            _gpsSufficient = _telemetryService.GPS.SufficientForFlight;
             EvaluateFlightStatus();
         }
 
@@ -102,19 +93,17 @@ namespace UAV_Assistive_Operation.Services
         //Controller alerts
         private void ControllerConnected(Gamepad gamepad)
         {
-            _controllerConnection = true;
             EvaluateControllerDisconnection();
         }
 
         private void ControllerDisconnected()
         {
-            _controllerConnection = false;
             EvaluateControllerDisconnection();
         }
 
         private void EvaluateControllerDisconnection()
         {
-            _alertService.AlertState("ControllerConnection", !_controllerConnection, "Controller Disconnected", 2);
+            _alertService.AlertState("ControllerConnection", !_controllerService.IsControllerConnected, "Controller Disconnected", 2);
         }
 
         //Motor alerts
@@ -319,16 +308,16 @@ namespace UAV_Assistive_Operation.Services
 
         private void EvaluateFlightStatus()
         {
-            if (!_connection)
+            if (!_connectionService.IsAircraftConnected)
             {
                 _alertService.ClearAlerts();
                 _alertService.FlightStatus("Aircraft Disconnected"); return;
             }
-            if (_flying)
+            if (_flightDataService.IsFlying)
             {
                 _alertService.FlightStatus("In-Flight"); return;
             }
-            if (_gpsSufficient)
+            if (_telemetryService.GPS.SufficientForFlight)
             {
                 _alertService.FlightStatus("Ready to Takeoff");
             }

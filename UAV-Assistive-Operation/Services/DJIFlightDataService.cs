@@ -10,6 +10,10 @@ namespace UAV_Assistive_Operation.Services
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
 
 
+        //Public variables for services to use
+        public bool IsFlying {  get; private set; }
+
+
         //MapService relevant events for services to subscribe to
         public event Action<double, double> UavLocationUpdated;
         public event Action<double> UAVHeadingUpdated;
@@ -19,7 +23,6 @@ namespace UAV_Assistive_Operation.Services
         public event Action<bool> SeriousBatteryChanged;
         public event Action<bool> LowBatteryChanged;
         public event Action<FCMotorStartFailureError> MotorStartFailureChanged;
-        public event Action<bool> MotorStuckChanged;
         public event Action<FCWindWarning> WindWarningChanged;
 
         public void AircraftConnected()
@@ -40,7 +43,6 @@ namespace UAV_Assistive_Operation.Services
             if (_flightControllerHandler != null)
             {
                 InitAircraftFlyingChanged();
-                InitMotorStuck();
 
                 _flightControllerHandler.AircraftLocationChanged += AircraftLocationChanged;
                 _flightControllerHandler.AttitudeChanged += AircraftAttitudeChanged;
@@ -76,14 +78,10 @@ namespace UAV_Assistive_Operation.Services
         {
             var flying = await _flightControllerHandler.GetIsFlyingAsync();
             if (flying.value != null)
-                FlyingChanged?.Invoke(flying.value.Value.value);
-        }
-
-        private async void InitMotorStuck()
-        {
-            var stuck = await _flightControllerHandler.GetIsMotorStuckAsync();
-            if (stuck.value != null)
-                MotorStuckChanged?.Invoke(stuck.value.Value.value);      
+            {
+                IsFlying = flying.value.Value.value;
+                FlyingChanged?.Invoke(IsFlying);
+            }    
         }
 
 
@@ -112,8 +110,8 @@ namespace UAV_Assistive_Operation.Services
             if (!IsAircraftConnected || value == null)
                 return;
 
-            var flying = value.Value.value;
-            FlyingChanged?.Invoke(flying);
+            IsFlying = value.Value.value;
+            FlyingChanged?.Invoke(IsFlying);
         }
 
         private void SeriousLowBattery(object sender, BoolMsg? value)
@@ -150,6 +148,12 @@ namespace UAV_Assistive_Operation.Services
 
             var level = value.Value.value;
             WindWarningChanged.Invoke(level);
+        }
+
+        //Method to check if aircraft can be configured
+        public bool CanConfigureAircraft()
+        {
+            return IsAircraftConnected && !IsFlying;
         }
     }
 }

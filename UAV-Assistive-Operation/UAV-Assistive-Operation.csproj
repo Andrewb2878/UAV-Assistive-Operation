@@ -140,6 +140,7 @@
     <Compile Include="Models\ControllerStateModel.cs" />
     <Compile Include="Models\ControlRemapRowViewModel.cs" />
     <Compile Include="Models\ControlRulesModel.cs" />
+    <Compile Include="Models\DJIErrorDecoderModel.cs" />
     <Compile Include="Models\FlightCommandViewModel.cs" />
     <Compile Include="Models\FlightModeTelemetryModel.cs" />
     <Compile Include="Models\GPSStrengthTelemetryModel.cs" />

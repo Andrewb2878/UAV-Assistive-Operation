@@ -47,7 +47,8 @@ namespace UAV_Assistive_Operation
             ViewModel = new MainViewModel(_mappingService);
             DataContext = ViewModel;
 
-            _processingService = new ControllerProcessingService(_mappingService, ViewModel.FlightCommand);
+            _processingService = new ControllerProcessingService(_mappingService, App.DJIFlightControllerService,
+                ViewModel.FlightCommand);
             _mapService = new MapService(MapView);
             _popupService = new UIPopupService();
             _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);
@@ -55,7 +56,6 @@ namespace UAV_Assistive_Operation
 
             //Setup subscriptions
             RegisterEvents();
-
 
             _ = InitializeMapAsync();
         }
