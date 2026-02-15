@@ -162,7 +162,7 @@ namespace UAV_Assistive_Operation
                 _processingService.Start();
 
                 await Task.Delay(5000);
-                EventLogService.Instance.Log(LogEventType.Info, $"Controller configured");
+                EventLogService.Instance.Log(LogEventType.System, $"Controller configured");
 
                 EvaluatePopupState();
             }

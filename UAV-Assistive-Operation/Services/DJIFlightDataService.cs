@@ -23,6 +23,7 @@ namespace UAV_Assistive_Operation.Services
         public event Action<bool> SeriousBatteryChanged;
         public event Action<bool> LowBatteryChanged;
         public event Action<FCMotorStartFailureError> MotorStartFailureChanged;
+        public event Action<bool> NotEnoughForceChanged;
         public event Action<FCWindWarning> WindWarningChanged;
 
         public void AircraftConnected()
@@ -51,6 +52,7 @@ namespace UAV_Assistive_Operation.Services
                 _flightControllerHandler.IsSeriousLowBatteryWarningChanged += SeriousLowBattery;
                 _flightControllerHandler.IsLowBatteryWarningChanged += LowBattery;
                 _flightControllerHandler.MotorStartFailureErrorChanged += MotorStartFailure;
+                _flightControllerHandler.HasNoEnoughForceChanged += NotEnoughForce;
                 _flightControllerHandler.WindWarningChanged += WindWarning;
             }
         }
@@ -68,6 +70,7 @@ namespace UAV_Assistive_Operation.Services
                 _flightControllerHandler.IsSeriousLowBatteryWarningChanged -= SeriousLowBattery;
                 _flightControllerHandler.IsLowBatteryWarningChanged -= LowBattery;
                 _flightControllerHandler.MotorStartFailureErrorChanged -= MotorStartFailure;
+                _flightControllerHandler.HasNoEnoughForceChanged -= NotEnoughForce;
                 _flightControllerHandler.WindWarningChanged -= WindWarning;
                 _flightControllerHandler = null;
             }
@@ -139,6 +142,15 @@ namespace UAV_Assistive_Operation.Services
 
             var motorStartFailure = value.Value.value;
             MotorStartFailureChanged?.Invoke(motorStartFailure);
+        }
+
+        private void NotEnoughForce(object sender, BoolMsg? value)
+        {
+            if (!IsAircraftConnected || value == null)
+                return;
+
+            var enoughForce = value.Value.value;
+            NotEnoughForceChanged?.Invoke(enoughForce);
         }
 
         private void WindWarning(object sender, FCWindWarningMsg? value)
