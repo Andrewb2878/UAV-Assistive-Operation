@@ -68,18 +68,22 @@ namespace UAV_Assistive_Operation.Services
         //Configuring aircraft on connection
         private async Task<bool> ConfigureAircraftAsync()
         {
-            if (_flightController == null || _flightAssistant == null)
+            var controller = _flightController;
+            var assistant = _flightAssistant;
+            var dataService = _flightDataService;
+
+            if (controller == null || assistant == null || dataService == null)
                 return false;
 
             try
             {
-                if (_flightDataService.CanConfigureAircraft())
+                if (dataService.CanConfigureAircraft())
                 {
-                    await _flightController.SetFailsafeActionAsync(new FCFailsafeActionMsg { value = FCFailsafeAction.LANDING });
-                    await _flightController.SetLowBatteryWarningThresholdAsync(new IntMsg { value = 20 });
-                    await _flightController.SetSeriousLowBatteryWarningThresholdAsync(new IntMsg { value = 10 });
+                    await controller.SetFailsafeActionAsync(new FCFailsafeActionMsg { value = FCFailsafeAction.LANDING });
+                    await controller.SetLowBatteryWarningThresholdAsync(new IntMsg { value = 20 });
+                    await controller.SetSeriousLowBatteryWarningThresholdAsync(new IntMsg { value = 10 });
 
-                    await _flightAssistant.SetVisionAssistedPositioningEnabledAsync(new BoolMsg { value = true });
+                    await assistant.SetVisionAssistedPositioningEnabledAsync(new BoolMsg { value = true });
                     return true;
                 }
                     return false;
