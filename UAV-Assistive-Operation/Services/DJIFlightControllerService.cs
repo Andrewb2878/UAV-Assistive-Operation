@@ -27,6 +27,7 @@ namespace UAV_Assistive_Operation.Services
 
             _flightDataService.NotEnoughForceChanged += NotEnoughForceDetected;
             _flightDataService.MotorStartFailureChanged += MotorStartFailureDetected;
+            _flightDataService.SeriousBatteryChanged += SeriousBatteryDetected;
 
             _flightController = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0);
             _flightAssistant = DJISDKManager.Instance.ComponentManager.GetFlightAssistantHandler(0, 0);
@@ -45,6 +46,7 @@ namespace UAV_Assistive_Operation.Services
             {
                 _flightDataService.NotEnoughForceChanged -= NotEnoughForceDetected;
                 _flightDataService.MotorStartFailureChanged -= MotorStartFailureDetected;
+                _flightDataService.SeriousBatteryChanged -= SeriousBatteryDetected;
             }
 
 
@@ -126,6 +128,12 @@ namespace UAV_Assistive_Operation.Services
                 await StopAsync();
         }
 
+        private async void SeriousBatteryDetected(bool seriousBattery)
+        {
+            if (_flightDataService.IsFlying)
+                await LandAsync(false);
+        }
+
 
         //Aircraft command methods
         private async Task ExecuteFlightCommandAsync(Func<Task<SDKError>> command, string commandName, bool logResult)
@@ -185,6 +193,13 @@ namespace UAV_Assistive_Operation.Services
         //Aircraft command validation method
         private bool ValidateCommandExecution()
         {
+            //Ensures sufficient battery for flight
+            if (_isConfigured && (_flightDataService.IsLowBattery || _flightDataService.IsSeriousLowBattery) &&
+                !_flightDataService.IsFlying)
+            {
+                return false;
+            }
+                
             //Ensures sufficient GPS signal before flight
             if (_isConfigured && !_telemetryService.GPS.SufficientForFlight && !_flightDataService.IsFlying)
             {

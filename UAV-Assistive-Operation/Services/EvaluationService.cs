@@ -77,16 +77,29 @@ namespace UAV_Assistive_Operation.Services
         {
             _alertService.AlertState("SeriousBattery", seriousBattery, "Critically Low Battery", 1);
             
-            if (seriousBattery)
+            if (seriousBattery && _flightDataService.IsFlying)
+            {
+                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Critically low aircraft battery: auto landing...");
+            }
+            else if (seriousBattery && !_flightDataService.IsFlying)
+            {
                 EventLogService.Instance.Log(Enums.LogEventType.Warning, "Critically low aircraft battery");
+            }
         }
 
         private void LowBatteryChanged(bool lowBattery)
         {
             _alertService.AlertState("LowBattery", lowBattery, "Low Battery Warning", 4);
 
-            if (lowBattery)
-                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Low aircraft battery");
+            if (lowBattery && _flightDataService.IsFlying)
+            {
+                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Low aircraft battery: aircraft will auto land shortly");
+            }
+            else if (lowBattery && !_flightDataService.IsFlying)
+            {
+                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Low aircraft battery: cannot takeoff");
+            }
+                
         }
 
 
