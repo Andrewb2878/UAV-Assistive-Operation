@@ -178,7 +178,7 @@ namespace UAV_Assistive_Operation.Services
 
         public void VirtualStickCommand(float throttle, float yaw, float pitch, float roll)
         {
-            if (!ValidateCommandExecution())
+            if (!ValidateCommandExecution() && !_flightDataService.IsFlying)
                 return;
 
             throttle = Math.Clamp(throttle, -1f, 1f);

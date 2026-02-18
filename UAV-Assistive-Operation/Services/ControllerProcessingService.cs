@@ -57,6 +57,8 @@ namespace UAV_Assistive_Operation.Services
             HandleCommand(ApplicationControls.Stop, current,
                 value => _flightCommand.StopActive = value,
                 () => _flightControllerService.StopAsync());
+
+            ProcessVirtualJoystick(current);
         }
 
         private void HandleCommand(ApplicationControls control, Dictionary<ApplicationControls, double> current,
@@ -72,6 +74,37 @@ namespace UAV_Assistive_Operation.Services
                 _ = executeCommand();
 
             _previousState[control] = isPressed;
+        }
+
+        private void ProcessVirtualJoystick(Dictionary<ApplicationControls, double> current)
+        {
+            float throttle = CombineAxis(current, ApplicationControls.ThrottleUp, ApplicationControls.ThrottleDown);
+            float yaw = CombineAxis(current, ApplicationControls.YawRight, ApplicationControls.YawLeft);
+            float pitch = CombineAxis(current, ApplicationControls.PitchForward, ApplicationControls.PitchBackward);
+            float roll = CombineAxis(current, ApplicationControls.RollRight, ApplicationControls.RollLeft);
+
+            _flightControllerService.VirtualStickCommand(throttle, yaw, pitch, roll);
+        }
+
+        private float CombineAxis(Dictionary<ApplicationControls, double> current, ApplicationControls positive,
+                                    ApplicationControls negative)
+        {
+            current.TryGetValue(positive, out var pos);
+            current.TryGetValue(negative, out var neg);
+
+            //Dead zones
+            if (Math.Abs(pos) < 0.07)
+                pos = 0;
+            if (Math.Abs(neg) < 0.07)
+                neg = 0;
+
+
+            if (Math.Abs(pos) > Math.Abs(neg))
+                return (float)pos;
+            if (Math.Abs(neg) > Math.Abs(pos))
+                return -(float)neg;
+
+            return 0f;
         }
     }
 }
