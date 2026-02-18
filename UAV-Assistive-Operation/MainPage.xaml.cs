@@ -24,6 +24,7 @@ namespace UAV_Assistive_Operation
 
         //State
         private bool _mapServiceAvailable = false;
+        private bool _startedConfiguration = false;
         private bool _completingConfiguration = false;
         public MainViewModel ViewModel { get; }
 
@@ -114,7 +115,11 @@ namespace UAV_Assistive_Operation
 
         private void ShowRemapping()
         {
-            _remapInputService.InputDetected += InputDetected;
+            if (!_startedConfiguration)
+            {
+                _remapInputService.InputDetected += InputDetected;
+                _startedConfiguration = true;
+            }
             _remapInputService.Start();
         }
 
@@ -158,6 +163,9 @@ namespace UAV_Assistive_Operation
             try
             {
                 _remapInputService.Stop();
+                _remapInputService.InputDetected -= InputDetected;
+                _startedConfiguration = false;
+
                 ShowCompletionProgress();
                 _processingService.Start();
 

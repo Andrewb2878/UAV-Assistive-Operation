@@ -1,7 +1,6 @@
 ﻿using System;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
-using Windows.Gaming.Input;
 
 namespace UAV_Assistive_Operation.Services
 {
