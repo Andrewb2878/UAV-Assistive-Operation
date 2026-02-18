@@ -91,7 +91,8 @@ namespace UAV_Assistive_Operation
 
             DJIConnectionService.AircraftConnected += DJITelemetryService.AircraftConnected;
             DJIConnectionService.AircraftConnected += DJIFlightDataService.AircraftConnected;
-            DJIConnectionService.AircraftConnected += () => DJIFlightControllerService.AircraftConnected(DJITelemetryService,
+            DJIConnectionService.AircraftConnected += () => DJIFlightControllerService.AircraftConnected(DJIConnectionService,
+                                                                                                        DJITelemetryService,
                                                                                                         DJIFlightDataService);
 
             DJIConnectionService.AircraftDisconnected += DJITelemetryService.AircraftDisconnected;

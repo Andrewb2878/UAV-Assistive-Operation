@@ -13,15 +13,24 @@ namespace UAV_Assistive_Operation.Services
         private FlightAssistantHandler _flightAssistant;
         private VirtualRemoteController _virtualController;
 
+        private DJIConnectionService _connectionService;
         private DJITelemetryService _telemetryService;
         private DJIFlightDataService _flightDataService;
 
         private bool _isConfigured;
         private int _configAttempts;
 
+        private float _lastThrottle;
+        private float _lastYaw;
+        private float _lastPitch;
+        private float _lastRoll;
+        private const float StickChangeThreshold = 0.01f;
 
-        public void AircraftConnected(DJITelemetryService telemetryService, DJIFlightDataService flightDataService)
+
+        public void AircraftConnected(DJIConnectionService connectionService, DJITelemetryService telemetryService,
+            DJIFlightDataService flightDataService)
         {
+            _connectionService = connectionService;
             _telemetryService = telemetryService;
             _flightDataService = flightDataService;
 
@@ -49,11 +58,15 @@ namespace UAV_Assistive_Operation.Services
                 _flightDataService.SeriousBatteryChanged -= SeriousBatteryDetected;
             }
 
-
             _isConfigured = false;
             _flightController = null;
             _flightAssistant = null;
             _virtualController = null;
+
+            _lastThrottle = 0f;
+            _lastYaw = 0f;
+            _lastPitch = 0f;
+            _lastRoll = 0f;
         }
 
 
@@ -63,9 +76,13 @@ namespace UAV_Assistive_Operation.Services
             {
                 _isConfigured = await ConfigureAircraftAsync();
 
-                if (_isConfigured)
+                if (_isConfigured && _connectionService.IsAircraftConnected)
                 {
                     EventLogService.Instance.Log(LogEventType.System, "Aircraft configured successfully");
+                    return;
+                }
+                else if (!_connectionService.IsAircraftConnected)
+                {
                     return;
                 }
 
@@ -122,7 +139,7 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
-        private async void MotorStartFailureDetected(FCMotorStartFailureError error)
+       private async void MotorStartFailureDetected(FCMotorStartFailureError error)
         {
             if (error != FCMotorStartFailureError.NONE)
                 await StopAsync();
@@ -178,7 +195,9 @@ namespace UAV_Assistive_Operation.Services
 
         public void VirtualStickCommand(float throttle, float yaw, float pitch, float roll)
         {
-            if (!ValidateCommandExecution() && !_flightDataService.IsFlying)
+            if (_flightDataService == null || !_flightDataService.IsFlying)
+                return;
+            if (!ValidateCommandExecution())
                 return;
 
             throttle = Math.Clamp(throttle, -1f, 1f);
@@ -186,7 +205,23 @@ namespace UAV_Assistive_Operation.Services
             pitch = Math.Clamp(pitch, -1f, 1f);
             roll = Math.Clamp(roll, -1f, 1f);
 
+            if (!HasStickChanged(throttle, yaw, pitch, roll))
+                return;
+
             _virtualController.UpdateJoystickValue(throttle, yaw, pitch, roll);
+
+            _lastThrottle = throttle;
+            _lastYaw = yaw;
+            _lastPitch = pitch;
+            _lastRoll = roll;
+        }
+
+        private bool HasStickChanged(float throttle, float yaw, float pitch, float roll)
+        {
+            return Math.Abs(throttle - _lastThrottle) > StickChangeThreshold ||
+                Math.Abs(yaw - _lastYaw) > StickChangeThreshold ||
+                Math.Abs(pitch - _lastPitch) > StickChangeThreshold ||
+                Math.Abs(roll - _lastRoll) > StickChangeThreshold;
         }
 
 
