@@ -5,6 +5,7 @@
         None,
         ControllerRequired,
         ControllerRemapping,
-        AircraftRequired
+        AircraftRequired,
+        Menu
     }
 }

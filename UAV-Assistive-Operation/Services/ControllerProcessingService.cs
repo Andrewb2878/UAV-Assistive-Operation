@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
+using Windows.UI.Xaml.Controls;
 
 namespace UAV_Assistive_Operation.Services
 {
@@ -58,6 +59,7 @@ namespace UAV_Assistive_Operation.Services
                 value => _flightCommand.StopActive = value,
                 () => _flightControllerService.StopAsync());
 
+            HandleMenu(current);
             ProcessVirtualJoystick(current);
         }
 
@@ -65,7 +67,6 @@ namespace UAV_Assistive_Operation.Services
             Action<bool> setActive, Func<Task> executeCommand)
         {
             current.TryGetValue(control, out var value);
-
             bool isPressed = value > PressThreshold;
             setActive(isPressed);
 
@@ -74,6 +75,18 @@ namespace UAV_Assistive_Operation.Services
                 _ = executeCommand();
 
             _previousState[control] = isPressed;
+        }
+
+        private void HandleMenu(Dictionary<ApplicationControls, double> current)
+        {
+            current.TryGetValue(ApplicationControls.Menu, out var value);
+            bool pressed = value > PressThreshold;
+
+            _previousState.TryGetValue(ApplicationControls.Menu, out var wasPressed);
+            if (pressed && !wasPressed)
+                _flightCommand.MenuActive = !_flightCommand.MenuActive;
+
+            _previousState[ApplicationControls.Menu] = pressed;
         }
 
         private void ProcessVirtualJoystick(Dictionary<ApplicationControls, double> current)

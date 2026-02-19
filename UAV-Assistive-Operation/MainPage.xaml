@@ -178,7 +178,14 @@
                     HorizontalAlignment="Center" />
             </StackPanel>
         </ContentDialog>
-        
+
+        <!--Menu Popup-->
+        <ContentDialog
+            x:Name="MenuPopup"
+            Title="Menu">
+            
+        </ContentDialog>
+
 
         <!--UAV map-->
         <Grid x:Name="MapContainer" Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
@@ -219,7 +226,11 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!--Menu Icon-->
+            <!--Menu Icon with highlight-->
+            <Border
+                Grid.Column="0"
+                Background="#55000000"
+                Visibility="{Binding FlightCommand.MenuActive, Converter={StaticResource BoolToVisibilityConverter}}"/>
             <Image 
                 x:Name="MenuIcon"
                 Grid.Column="0"

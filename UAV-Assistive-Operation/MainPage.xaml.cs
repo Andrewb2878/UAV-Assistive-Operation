@@ -26,12 +26,15 @@ namespace UAV_Assistive_Operation
         private bool _mapServiceAvailable = false;
         private bool _startedConfiguration = false;
         private bool _completingConfiguration = false;
+        private bool _completedFirstAircraftConnection = false;
         public MainViewModel ViewModel { get; }
 
 
+        //Vales used to control popup visibilities
         private bool IsControllerConnected => App.ControllerService.IsControllerConnected;
         private bool IsControllerRemapped => _mappingService.IsFullyRemapped;
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
+        private bool IsMenuOpen => ViewModel.FlightCommand.MenuActive;
         
 
 
@@ -47,12 +50,13 @@ namespace UAV_Assistive_Operation
             //View model initialization
             ViewModel = new MainViewModel(_mappingService);
             DataContext = ViewModel;
+            ViewModel.FlightCommand.PropertyChanged += FlightCommand_PropertyChanged;
 
             _processingService = new ControllerProcessingService(_mappingService, App.DJIFlightControllerService,
                 ViewModel.FlightCommand);
             _mapService = new MapService(MapView);
             _popupService = new UIPopupService();
-            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup);
+            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup, MenuPopup);
 
 
             //Setup subscriptions
@@ -89,6 +93,14 @@ namespace UAV_Assistive_Operation
             EvaluatePopupState();
         }
 
+        private void FlightCommand_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ViewModel.FlightCommand.MenuActive))
+            {
+                EvaluatePopupState();
+            }
+        }
+
 
         //UI methods        
         private void EvaluatePopupState()
@@ -102,9 +114,13 @@ namespace UAV_Assistive_Operation
                 _popupService.ShowPopup(UIPopups.ControllerRemapping);
                 ShowRemapping();
             }
-            else if (!IsAircraftConnected)
+            else if (!IsAircraftConnected && !_completedFirstAircraftConnection)
             {
                 _popupService.ShowPopup(UIPopups.AircraftRequired);
+            }
+            else if (IsMenuOpen)
+            {
+                _popupService.ShowPopup(UIPopups.Menu);
             }
             else
             {
@@ -221,6 +237,7 @@ namespace UAV_Assistive_Operation
         //Aircraft methods
        private void AircraftConnected()
         {
+            _completedFirstAircraftConnection = true;
             EvaluatePopupState();
         }
     }
