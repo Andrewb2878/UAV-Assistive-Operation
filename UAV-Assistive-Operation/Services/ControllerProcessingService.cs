@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
-using Windows.UI.Xaml.Controls;
 
 namespace UAV_Assistive_Operation.Services
 {

@@ -125,6 +125,7 @@
     <Compile Include="Converters\StringToVisibilityConverter.cs" />
     <Compile Include="Enums\ApplicationControls.cs" />
     <Compile Include="Enums\AxisPolarity.cs" />
+    <Compile Include="Enums\InputMode.cs" />
     <Compile Include="Enums\InputTypes.cs" />
     <Compile Include="Enums\LogEventType.cs" />
     <Compile Include="Enums\MapInitResult.cs" />
