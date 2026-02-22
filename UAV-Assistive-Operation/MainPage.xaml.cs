@@ -34,7 +34,7 @@ namespace UAV_Assistive_Operation
         private bool IsControllerConnected => App.ControllerService.IsControllerConnected;
         private bool IsControllerRemapped => _mappingService.IsFullyRemapped;
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
-        private bool IsMenuOpen => ViewModel.FlightCommand.MenuActive;
+        private bool IsMenuOpen => ViewModel.Menu.MenuActive;
         
 
 
@@ -50,10 +50,10 @@ namespace UAV_Assistive_Operation
             //View model initialization
             ViewModel = new MainViewModel(_mappingService);
             DataContext = ViewModel;
-            ViewModel.FlightCommand.PropertyChanged += FlightCommand_PropertyChanged;
+            ViewModel.Menu.PropertyChanged += Menu_PropertyChanged;
 
             _processingService = new ControllerProcessingService(_mappingService, App.DJIFlightControllerService,
-                ViewModel.FlightCommand);
+                ViewModel.FlightCommand, ViewModel.Menu);
             _mapService = new MapService(MapView);
             _popupService = new UIPopupService();
             _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup, MenuPopup);
@@ -76,6 +76,8 @@ namespace UAV_Assistive_Operation
             App.ControllerService.GamepadConnected += _ => EvaluatePopupState();
             App.DJIConnectionService.AircraftConnected += AircraftConnected;
 
+            ViewModel.Menu.ItemSelected += Menu_ItemSelected;
+
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
             {
                 await _mapService.UpdateUavLocation(lat, lon);
@@ -93,16 +95,26 @@ namespace UAV_Assistive_Operation
             EvaluatePopupState();
         }
 
-        private void FlightCommand_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void Menu_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ViewModel.FlightCommand.MenuActive))
+            if (e.PropertyName == nameof(ViewModel.Menu.MenuActive))
             {
+                if (ViewModel.Menu.MenuActive)
+                {
+                    ViewModel.Menu.SelectedIndex = 0;
+                    _processingService.SetMode(InputMode.Menu);
+                }
+                else
+                {
+                    _processingService.SetMode(InputMode.Flight);
+                }
+
                 EvaluatePopupState();
             }
         }
 
 
-        //UI methods        
+        //UI popup methods        
         private void EvaluatePopupState()
         {
             if (!IsControllerConnected)
@@ -125,10 +137,10 @@ namespace UAV_Assistive_Operation
             else
             {
                 _popupService.ShowPopup(UIPopups.None);
-
             }
         }
 
+        //Controller configuration popup
         private void ShowRemapping()
         {
             if (!_startedConfiguration)
@@ -162,8 +174,7 @@ namespace UAV_Assistive_Operation
             if (currentRow == null)
                 return;
 
-            var container = RemapItemsControl.ContainerFromItem(currentRow) as FrameworkElement;
-            if (container != null)
+            if (RemapItemsControl.ContainerFromItem(currentRow) is FrameworkElement container)
             {
                 var transform = container.TransformToVisual(RemapItemsControl);
                 var position = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
@@ -201,6 +212,18 @@ namespace UAV_Assistive_Operation
         {
             RemapProgressText.Visibility = Visibility.Visible;
             RemapProgressBar.Visibility = Visibility.Visible;
+        }
+
+        //Menu popup
+        private void Menu_ItemSelected(int index)
+        {
+            switch (index)
+            {
+                case 0:             //Simulator mode
+                    break;
+                case 1:             //Exit application
+                    break;
+            }
         }
 
 

@@ -13,17 +13,17 @@ namespace UAV_Assistive_Operation.Models
         private readonly ControllerMappingService _mappingService;
         private int _currentRemapIndex = 0;
 
-        public ObservableCollection<ControlRemapRowViewModel> RemapRows { get; }
+        public ObservableCollection<ControllerConfigurationRowViewModel> RemapRows { get; }
 
-        public ControlRemapRowViewModel CurrentRow => _currentRemapIndex < RemapRows.Count ? RemapRows[_currentRemapIndex] : null;
+        public ControllerConfigurationRowViewModel CurrentRow => _currentRemapIndex < RemapRows.Count ? RemapRows[_currentRemapIndex] : null;
 
         public ControllerConfigurationViewModel(ControllerMappingService mappingService)
         {
             _mappingService = mappingService;
 
             var controls = Enum.GetValues(typeof(ApplicationControls)).Cast<ApplicationControls>();
-            RemapRows = new ObservableCollection<ControlRemapRowViewModel>(
-                controls.Select(c => new ControlRemapRowViewModel(c)));
+            RemapRows = new ObservableCollection<ControllerConfigurationRowViewModel>(
+                controls.Select(control => new ControllerConfigurationRowViewModel(control)));
 
             HighlightCurrentRow();
         }
@@ -68,7 +68,7 @@ namespace UAV_Assistive_Operation.Models
         private bool AdvanceToNext()
         {
             int nextIndex = _currentRemapIndex + 1;
-            while (nextIndex < RemapRows.Count && RemapRows[nextIndex].AssignedInput != ControlRemapRowViewModel.DefaultWaitingText)
+            while (nextIndex < RemapRows.Count && RemapRows[nextIndex].AssignedInput != ControllerConfigurationRowViewModel.DefaultWaitingText)
                 nextIndex++;
 
             if (nextIndex >= RemapRows.Count)

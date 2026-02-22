@@ -5,7 +5,7 @@ using UAV_Assistive_Operation.Helpers;
 
 namespace UAV_Assistive_Operation.Models
 {
-    public class ControlRemapRowViewModel : INotifyPropertyChanged
+    public class ControllerConfigurationRowViewModel : INotifyPropertyChanged
     {
         public const string DefaultWaitingText = "Waiting for input...";
 
@@ -46,7 +46,7 @@ namespace UAV_Assistive_Operation.Models
             }
         }
 
-        public ControlRemapRowViewModel(ApplicationControls controls)
+        public ControllerConfigurationRowViewModel(ApplicationControls controls)
         {
             Controls = controls;
             AssignedInput = DefaultWaitingText;

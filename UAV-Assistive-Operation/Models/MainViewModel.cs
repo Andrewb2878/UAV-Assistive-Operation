@@ -8,6 +8,8 @@ namespace UAV_Assistive_Operation.Models
         public ControllerConfigurationViewModel ControllerConfiguration { get; }
         public FlightCommandViewModel FlightCommand { get; }
 
+        public MenuViewModel Menu { get; }
+
         public AlertService Alerts => App.AlertService;
         public DJITelemetryService Telemetry => App.DJITelemetryService;
         public ObservableCollection<LogEntryModel> EventLog => EventLogService.Instance.LogEntries;
@@ -17,6 +19,7 @@ namespace UAV_Assistive_Operation.Models
         {
             ControllerConfiguration = new ControllerConfigurationViewModel(mappingService);
             FlightCommand = new FlightCommandViewModel();
+            Menu = new MenuViewModel(App.DJIFlightDataService);
         }
     }
 }

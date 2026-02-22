@@ -24,7 +24,7 @@ namespace UAV_Assistive_Operation.Converters
             return Visibility.Collapsed;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, string langauge)
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
             if (value is Visibility v)
                 return v == Visibility.Visible;

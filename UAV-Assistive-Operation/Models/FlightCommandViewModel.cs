@@ -8,7 +8,6 @@ namespace UAV_Assistive_Operation.Models
         private bool _takeoffActive;
         private bool _landActive;
         private bool _stopActive;
-        private bool _menuActive;
 
         public bool TakeoffActive
         {
@@ -26,12 +25,6 @@ namespace UAV_Assistive_Operation.Models
         {
             get => _stopActive;
             set => Set(ref _stopActive, value);
-        }
-
-        public bool MenuActive
-        {
-            get => _menuActive;
-            set => Set(ref _menuActive, value);
         }
 
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
 
@@ -8,22 +7,29 @@ namespace UAV_Assistive_Operation.Services
 {
     public class ControllerProcessingService
     {
+        //Services
         private readonly ControllerMappingService _mappingService;
         private readonly DJIFlightControllerService _flightControllerService;
         private readonly FlightCommandViewModel _flightCommand;
+        private readonly MenuViewModel _menuViewModel;
 
+        //States
+        private InputMode _mode = InputMode.Flight;
         private readonly Dictionary<ApplicationControls, bool> _previousState = 
             new Dictionary<ApplicationControls, bool>();
 
+        //Variables
         private const double PressThreshold = 0.8;
+        private const double DeadZoneThreshold = 0.07;
 
 
         public ControllerProcessingService(ControllerMappingService mappingService, 
-            DJIFlightControllerService flightControllerService, FlightCommandViewModel flightCommand)
+            DJIFlightControllerService flightControllerService, FlightCommandViewModel flightCommand, MenuViewModel menuViewModel)
         {
             _mappingService = mappingService;
             _flightControllerService = flightControllerService;
             _flightCommand = flightCommand;
+            _menuViewModel = menuViewModel;
         }
 
         public void Start()
@@ -36,56 +42,81 @@ namespace UAV_Assistive_Operation.Services
             App.ControllerService.ControllerUpdated -= GamepadUpdated;
         }
 
+        public void SetMode(InputMode mode)
+        {
+            if (_mode == mode)
+                return;
+
+            if (_mode == InputMode.Flight)
+                ResetFlightCommandUI();
+
+            _mode = mode;
+        }
+
         private void GamepadUpdated(ControllerStateModel state)
         {
             Process(state.Buttons, state.Axes);
         }
 
 
+        //Selects which controls to enable based on InputMode
         public void Process(bool[] buttons, double[] axes)
         {
             var current = _mappingService.ProcessInput(buttons, axes);
 
-            HandleCommand(ApplicationControls.Takeoff, current,
-                value => _flightCommand.TakeoffActive = value,
-                () => _flightControllerService.TakeoffAsync());
-
-            HandleCommand(ApplicationControls.Land, current,
-                value => _flightCommand.LandActive = value,
-                () => _flightControllerService.LandAsync());
-
-            HandleCommand(ApplicationControls.Stop, current,
-                value => _flightCommand.StopActive = value,
-                () => _flightControllerService.StopAsync());
-
-            HandleMenu(current);
-            ProcessVirtualJoystick(current);
+            switch (_mode)
+            {
+                case InputMode.Flight:
+                    HandleFlight(current); break;
+                case InputMode.Menu:
+                    HandleMenuNavigation(current); break;
+            }
         }
 
+
+        //Processes control input with edge detection
         private void HandleCommand(ApplicationControls control, Dictionary<ApplicationControls, double> current,
-            Action<bool> setActive, Func<Task> executeCommand)
+            Action action, Action<bool> setActive = null)
         {
             current.TryGetValue(control, out var value);
             bool isPressed = value > PressThreshold;
-            setActive(isPressed);
+
+            setActive?.Invoke(isPressed);
 
             _previousState.TryGetValue(control, out var wasPressed);
             if (isPressed && !wasPressed)
-                _ = executeCommand();
+                action();
 
             _previousState[control] = isPressed;
         }
 
-        private void HandleMenu(Dictionary<ApplicationControls, double> current)
+
+        //Flight control processing
+        private void ResetFlightCommandUI()
         {
-            current.TryGetValue(ApplicationControls.Menu, out var value);
-            bool pressed = value > PressThreshold;
+            _flightCommand.TakeoffActive = false;
+            _flightCommand.LandActive = false;
+            _flightCommand.StopActive = false;
 
-            _previousState.TryGetValue(ApplicationControls.Menu, out var wasPressed);
-            if (pressed && !wasPressed)
-                _flightCommand.MenuActive = !_flightCommand.MenuActive;
+            _previousState[ApplicationControls.Takeoff] = false;
+            _previousState[ApplicationControls.Land] = false;
+            _previousState[ApplicationControls.Stop] = false;
+        }
 
-            _previousState[ApplicationControls.Menu] = pressed;
+
+        private void HandleFlight(Dictionary<ApplicationControls, double> current)
+        {
+            HandleCommand(ApplicationControls.Takeoff, current, () => { _ = _flightControllerService.TakeoffAsync(); },
+                value => _flightCommand.TakeoffActive = value);
+
+            HandleCommand(ApplicationControls.Land, current, () => { _ = _flightControllerService.LandAsync(); },
+                value => _flightCommand.LandActive = value);
+
+            HandleCommand(ApplicationControls.Stop, current, () => { _ = _flightControllerService.StopAsync(); },
+                value => _flightCommand.StopActive = value);
+
+            HandleMenuToggle(current);
+            ProcessVirtualJoystick(current);
         }
 
         private void ProcessVirtualJoystick(Dictionary<ApplicationControls, double> current)
@@ -105,9 +136,9 @@ namespace UAV_Assistive_Operation.Services
             current.TryGetValue(negative, out var neg);
 
             //Dead zones
-            if (Math.Abs(pos) < 0.07)
+            if (Math.Abs(pos) < DeadZoneThreshold)
                 pos = 0;
-            if (Math.Abs(neg) < 0.07)
+            if (Math.Abs(neg) < DeadZoneThreshold)
                 neg = 0;
 
 
@@ -117,6 +148,31 @@ namespace UAV_Assistive_Operation.Services
                 return -(float)neg;
 
             return 0f;
+        }
+
+
+        //Menu control processing
+        private void HandleMenuToggle(Dictionary<ApplicationControls, double> current)
+        {
+            HandleCommand(ApplicationControls.Menu, current, () => _menuViewModel.MenuActive = !_menuViewModel.MenuActive);
+        }
+
+        private void HandleMenuNavigation(Dictionary<ApplicationControls, double> current)
+        {
+            HandleCommand(ApplicationControls.ThrottleUp, current, () => _menuViewModel.MoveUp());
+            HandleCommand(ApplicationControls.ThrottleDown, current, () => _menuViewModel.MoveDown());
+            HandleCommand(ApplicationControls.Select, current, () => _menuViewModel.Select());
+
+            HandleMenuToggle(current);
+        }
+
+        private void HandleMenuCommand(ApplicationControls control, bool isPressed, Action action)
+        {
+            _previousState.TryGetValue(control, out var wasPressed);
+            if (isPressed && !wasPressed)
+                action();
+
+            _previousState[control] = isPressed;
         }
     }
 }

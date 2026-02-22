@@ -46,8 +46,6 @@ namespace UAV_Assistive_Operation.Services
             if (_flightControllerHandler != null)
             {
                 InitAircraftFlyingChanged();
-                InitSeriousLowBatteryChanged();
-                InitLowBatteryChanged();
 
                 _flightControllerHandler.AircraftLocationChanged += AircraftLocationChanged;
                 _flightControllerHandler.AttitudeChanged += AircraftAttitudeChanged;
@@ -89,26 +87,6 @@ namespace UAV_Assistive_Operation.Services
                 IsFlying = flying.value.Value.value;
                 FlyingChanged?.Invoke(IsFlying);
             }    
-        }
-
-        private async void InitSeriousLowBatteryChanged()
-        {
-            var seriousBattery = await _flightControllerHandler.GetIsSeriousLowBatteryWarningAsync();
-            if (seriousBattery.value != null)
-            {
-                IsSeriousLowBattery = seriousBattery.value.Value.value;
-                SeriousBatteryChanged?.Invoke(IsSeriousLowBattery);
-            }
-        }
-
-        private async void InitLowBatteryChanged()
-        {
-            var lowBattery = await _flightControllerHandler.GetIsLowBatteryWarningAsync();
-            if (lowBattery.value != null)
-            {
-                IsLowBattery = lowBattery.value.Value.value;
-                LowBatteryChanged?.Invoke(IsLowBattery);
-            }
         }
 
 

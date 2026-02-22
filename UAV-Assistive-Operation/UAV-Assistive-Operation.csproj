@@ -120,8 +120,10 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Configuration\ControlRemappingRules.cs" />
+    <Compile Include="Configuration\MenuRules.cs" />
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\EventTypeToColorConverter.cs" />
+    <Compile Include="Converters\IndexToVisibilityConverter.cs" />
     <Compile Include="Converters\StringToVisibilityConverter.cs" />
     <Compile Include="Enums\ApplicationControls.cs" />
     <Compile Include="Enums\AxisPolarity.cs" />
@@ -129,6 +131,7 @@
     <Compile Include="Enums\InputTypes.cs" />
     <Compile Include="Enums\LogEventType.cs" />
     <Compile Include="Enums\MapInitResult.cs" />
+    <Compile Include="Enums\MenuOptions.cs" />
     <Compile Include="Enums\UIPopups.cs" />
     <Compile Include="Helpers\GetDisplayName.cs" />
     <Compile Include="MainPage.xaml.cs">
@@ -139,7 +142,7 @@
     <Compile Include="Models\BatteryTelemetryModel.cs" />
     <Compile Include="Models\ControllerConfigurationViewModel.cs" />
     <Compile Include="Models\ControllerStateModel.cs" />
-    <Compile Include="Models\ControlRemapRowViewModel.cs" />
+    <Compile Include="Models\ControllerConfigurationRowViewModel.cs" />
     <Compile Include="Models\ControlRulesModel.cs" />
     <Compile Include="Models\DJIErrorDecoderModel.cs" />
     <Compile Include="Models\FlightCommandViewModel.cs" />
@@ -148,6 +151,9 @@
     <Compile Include="Models\InputBindingModel.cs" />
     <Compile Include="Models\LogEntryModel.cs" />
     <Compile Include="Models\MainViewModel.cs" />
+    <Compile Include="Models\MenuRowViewModel.cs" />
+    <Compile Include="Models\MenuRulesModel.cs" />
+    <Compile Include="Models\MenuViewModel.cs" />
     <Compile Include="Models\SpeedTelemetryModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ControllerProcessingService.cs" />
