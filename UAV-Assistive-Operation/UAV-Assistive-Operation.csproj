@@ -123,7 +123,6 @@
     <Compile Include="Configuration\MenuRules.cs" />
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\EventTypeToColorConverter.cs" />
-    <Compile Include="Converters\IndexToVisibilityConverter.cs" />
     <Compile Include="Converters\StringToVisibilityConverter.cs" />
     <Compile Include="Enums\ApplicationControls.cs" />
     <Compile Include="Enums\AxisPolarity.cs" />

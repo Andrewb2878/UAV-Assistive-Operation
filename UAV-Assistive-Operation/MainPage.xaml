@@ -13,7 +13,6 @@
         <converters:EventTypeToColorConverter x:Key="EventTypeToColorConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
-        <converters:IndexToVisibilityConverter x:Key="IndexToVisibiltyConverter"/>
     </Page.Resources>
 
     <Grid Background="LightGray">
