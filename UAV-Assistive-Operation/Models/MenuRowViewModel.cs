@@ -8,9 +8,9 @@ namespace UAV_Assistive_Operation.Models
 {
     public class MenuRowViewModel : INotifyPropertyChanged
     {
-        public MenuOptions MenuOption { get; }
+        public MenuRowOptions MenuOption { get; }
         public string DisplayName => MenuOption.GetDisplayName();
-        public bool IsSimulatorRow => MenuOption == MenuOptions.simulatorMode;
+        public bool IsSimulatorRow => MenuOption == MenuRowOptions.simulatorMode;
 
 
         public bool IsToggleButton => MenuRules.Rules.TryGetValue(MenuOption, out var rule) && rule.IsToggleButton;
@@ -39,7 +39,21 @@ namespace UAV_Assistive_Operation.Models
             }
         }
 
-        public MenuRowViewModel(MenuOptions menuOption)
+        private bool _isPressed;
+        public bool IsPressed
+        {
+            get => _isPressed;
+            set
+            {
+                if (_isPressed != value)
+                {
+                    _isPressed = value;
+                    OnPropertyChanged(nameof(IsPressed));
+                }
+            }
+        }
+
+        public MenuRowViewModel(MenuRowOptions menuOption)
         {
             MenuOption = menuOption;
         }

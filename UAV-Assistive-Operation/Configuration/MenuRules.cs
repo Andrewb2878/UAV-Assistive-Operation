@@ -6,16 +6,16 @@ namespace UAV_Assistive_Operation.Configuration
 {
     public static class MenuRules
     {
-        public static readonly Dictionary<MenuOptions, MenuRulesModel> Rules =
-            new Dictionary<MenuOptions, MenuRulesModel>
+        public static readonly Dictionary<MenuRowOptions, MenuRulesModel> Rules =
+            new Dictionary<MenuRowOptions, MenuRulesModel>
         {
-            [MenuOptions.ReconfigController] = new MenuRulesModel
+            [MenuRowOptions.ReconfigController] = new MenuRulesModel
             {
                 IsToggleButton = false,
                 ButtonText = "Configure"
             },
 
-            [MenuOptions.simulatorMode] = new MenuRulesModel
+            [MenuRowOptions.simulatorMode] = new MenuRulesModel
             {
                 IsToggleButton = true
             }

@@ -11,6 +11,7 @@
 
     <Page.Resources>
         <converters:EventTypeToColorConverter x:Key="EventTypeToColorConverter"/>
+        <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
     </Page.Resources>
@@ -76,7 +77,7 @@
                     <StackPanel>
                         <TextBlock
                         Margin="0,0,0,15"
-                        Text="Controller configuration can be modified in the menu."
+                        Text="Controller configuration can be modified from the menu options."
                         TextWrapping="Wrap"
                         Opacity="0.6" />
 
@@ -152,14 +153,14 @@
                         x:Name="RemapProgressText"
                         Text="Setting inputs..."
                         HorizontalAlignment="Center"
-                        Visibility="Collapsed" />
+                        Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <ProgressBar
                         x:Name="RemapProgressBar"
                         IsIndeterminate="True"
                         Height="6"
                         Margin="10,0"
-                        Visibility="Collapsed" />
+                        Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </StackPanel>
             </Grid>
 
@@ -242,7 +243,7 @@
                                             IsHitTestVisible="False"                                            
                                             Content="{Binding DataContext.Menu.ToggleButtonText, ElementName=MenuPopup}"                                            
                                             BorderBrush="SlateGray"
-                                            Background="White"
+                                            Background="{Binding IsPressed, Converter={StaticResource BoolToColorConverter}}"
                                             CornerRadius="8"
                                             Visibility="{Binding IsToggleButton, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
@@ -251,7 +252,7 @@
                                             IsHitTestVisible="False"
                                             Content="{Binding ButtonText}"                                            
                                             BorderBrush="SlateGray"
-                                            Background="White"
+                                            Background="{Binding IsPressed, Converter={StaticResource BoolToColorConverter}}"
                                             CornerRadius="8"
                                             Visibility="{Binding IsToggleButton, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
                                     </StackPanel>
@@ -281,7 +282,7 @@
                         Background="#FFE0E0E0"
                         CornerRadius="10"
                         Padding="22"
-                        Visibility="{x:Bind ViewModel.Menu.IsExitHighlighted, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Visibility="{Binding Menu.IsExitHighlighted, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <StackPanel VerticalAlignment="Center">
                         <Button
@@ -290,18 +291,17 @@
                             HorizontalAlignment="Center"
                             IsHitTestVisible="False"
                             BorderBrush="SlateGray"
-                            Background="White"
+                            Background="{Binding Menu.IsExitPressed, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}"
                             CornerRadius="8"/>
-
-                        <TextBlock
-                            Text="{x:Bind ViewModel.Menu.ExitError, Mode=OneWay}"
-                            Foreground="Red"
-                            FontSize="12"
-                            HorizontalAlignment="Center"
-                            Margin="0,6,0,0"
-                            Visibility="{x:Bind ViewModel.Menu.ExitError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}"/>
                     </StackPanel>
                 </Grid>
+                
+                <TextBlock
+                    Text="{Binding Menu.ExitError, Mode=OneWay}"
+                    Foreground="Red"
+                    FontSize="12"
+                    HorizontalAlignment="Center"
+                    Visibility="{Binding Menu.ExitError, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}"/>
 
             </StackPanel>
         </ContentDialog>

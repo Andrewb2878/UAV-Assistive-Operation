@@ -2,7 +2,7 @@
 
 namespace UAV_Assistive_Operation.Enums
 {
-    public enum MenuOptions
+    public enum MenuRowOptions
     {
         [Display(Name = "Reconfigure controller")]
         ReconfigController,

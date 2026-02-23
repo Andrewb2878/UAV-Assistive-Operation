@@ -10,16 +10,23 @@ namespace UAV_Assistive_Operation.Models
 {
     public class ControllerConfigurationViewModel : INotifyPropertyChanged
     {
+        //Services
         private readonly ControllerMappingService _mappingService;
+
+        //States
         private int _currentRemapIndex = 0;
+        public bool IsFullyRemapped => _mappingService.IsFullyRemapped;
 
+        //Properties
         public ObservableCollection<ControllerConfigurationRowViewModel> RemapRows { get; }
-
         public ControllerConfigurationRowViewModel CurrentRow => _currentRemapIndex < RemapRows.Count ? RemapRows[_currentRemapIndex] : null;
 
+
+        //Initialization
         public ControllerConfigurationViewModel(ControllerMappingService mappingService)
         {
             _mappingService = mappingService;
+            _mappingService.RemappingStateChanged += RemappingStateChanged;
 
             var controls = Enum.GetValues(typeof(ApplicationControls)).Cast<ApplicationControls>();
             RemapRows = new ObservableCollection<ControllerConfigurationRowViewModel>(
@@ -28,6 +35,24 @@ namespace UAV_Assistive_Operation.Models
             HighlightCurrentRow();
         }
 
+
+        //Reset method
+        public void Reset()
+        {
+            _currentRemapIndex = 0;
+
+            foreach (var row in RemapRows) 
+            {
+                row.AssignedInput = ControllerConfigurationRowViewModel.DefaultWaitingText;
+                row.Error = null;
+                row.IsHighlighted = false;
+            }
+            OnPropertyChanged(nameof(CurrentRow));
+            HighlightCurrentRow();
+        }
+
+
+        //Input handling
         public bool HandleInput(InputBindingModel binding)
         {
             var row = CurrentRow;
@@ -65,6 +90,8 @@ namespace UAV_Assistive_Operation.Models
             return false;
         }
 
+
+        //Navigation methods
         private bool AdvanceToNext()
         {
             int nextIndex = _currentRemapIndex + 1;
@@ -86,6 +113,12 @@ namespace UAV_Assistive_Operation.Models
             foreach (var row in RemapRows)
                 row.IsHighlighted = row == CurrentRow;
         }
+
+        private void RemappingStateChanged()
+        {
+            OnPropertyChanged(nameof(IsFullyRemapped));
+        }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 

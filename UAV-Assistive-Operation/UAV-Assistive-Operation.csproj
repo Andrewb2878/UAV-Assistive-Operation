@@ -121,6 +121,7 @@
     </Compile>
     <Compile Include="Configuration\ControlRemappingRules.cs" />
     <Compile Include="Configuration\MenuRules.cs" />
+    <Compile Include="Converters\BoolToColorConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\EventTypeToColorConverter.cs" />
     <Compile Include="Converters\StringToVisibilityConverter.cs" />
@@ -130,7 +131,8 @@
     <Compile Include="Enums\InputTypes.cs" />
     <Compile Include="Enums\LogEventType.cs" />
     <Compile Include="Enums\MapInitResult.cs" />
-    <Compile Include="Enums\MenuOptions.cs" />
+    <Compile Include="Enums\MenuCommand.cs" />
+    <Compile Include="Enums\MenuRowOptions.cs" />
     <Compile Include="Enums\UIPopups.cs" />
     <Compile Include="Helpers\GetDisplayName.cs" />
     <Compile Include="MainPage.xaml.cs">

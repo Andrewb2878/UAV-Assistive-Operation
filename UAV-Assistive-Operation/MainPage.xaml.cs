@@ -76,7 +76,7 @@ namespace UAV_Assistive_Operation
             App.ControllerService.GamepadConnected += _ => EvaluatePopupState();
             App.DJIConnectionService.AircraftConnected += AircraftConnected;
 
-            ViewModel.Menu.ItemSelected += Menu_ItemSelected;
+            ViewModel.Menu.CommandRequested += MenuCommandRequested;
 
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
             {
@@ -193,11 +193,11 @@ namespace UAV_Assistive_Operation
                 _remapInputService.InputDetected -= InputDetected;
                 _startedConfiguration = false;
 
-                ShowCompletionProgress();
                 _processingService.Start();
 
                 await Task.Delay(5000);
                 EventLogService.Instance.Log(LogEventType.System, $"Controller configured");
+                _completingConfiguration = false;
 
                 EvaluatePopupState();
             }
@@ -208,22 +208,50 @@ namespace UAV_Assistive_Operation
             }
         }
 
-        private void ShowCompletionProgress()
-        {
-            RemapProgressText.Visibility = Visibility.Visible;
-            RemapProgressBar.Visibility = Visibility.Visible;
-        }
 
         //Menu popup
-        private void Menu_ItemSelected(int index)
+        private void MenuCommandRequested(MenuCommand command, int index)
         {
-            switch (index)
+            if (App.DJIFlightDataService.IsFlying)
             {
-                case 0:             //Simulator mode
-                    break;
-                case 1:             //Exit application
-                    break;
+                ViewModel.Menu.SetRowError(index, "Cannot perform action during flight.");
+                return;
             }
+
+            switch (command)
+            {
+                case MenuCommand.ReconfigureController:
+                    _ = HandleReconfigAsync(); break;
+                case MenuCommand.ToggleSimulator:
+                    HandleToggleSimulator(); break;
+                case MenuCommand.ExitApplication:
+                    HandleExit(); break;
+            }
+        }
+
+        private async Task HandleReconfigAsync()
+        {
+            _processingService.Stop();
+            _mappingService.ClearBindings();
+
+            ViewModel.ControllerConfiguration.Reset();
+            ViewModel.Menu.MenuActive = false;
+
+            EvaluatePopupState();
+            EventLogService.Instance.Log(LogEventType.System, "Controller reconfiguration started...");
+
+            await Task.Delay(50);
+            RemapScrollViewer.ChangeView(null, 0, null);
+        }
+
+        private void HandleToggleSimulator()
+        {
+            ViewModel.Menu.IsToggleButtonEnabled = !ViewModel.Menu.IsToggleButtonEnabled;
+        }
+
+        private void HandleExit()
+        {
+            Application.Current.Exit();
         }
 
 

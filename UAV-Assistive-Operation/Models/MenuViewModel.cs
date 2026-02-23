@@ -3,31 +3,20 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using UAV_Assistive_Operation.Enums;
-using UAV_Assistive_Operation.Services;
 
 namespace UAV_Assistive_Operation.Models
 {
     public class MenuViewModel : INotifyPropertyChanged
     {
-        private readonly DJIFlightDataService _flightDataService;
-
+        //States
         private bool _menuActive = false;
-        private bool _simulatorEnabled;
+        private bool _toggleButtonEnabled;
         private int _currentIndex = 0;
 
+        //Properties
         public ObservableCollection<MenuRowViewModel> MenuRows { get; }
-
-
-        public MenuViewModel(DJIFlightDataService flightDataService) 
-        {
-            _flightDataService = flightDataService;
-
-            var options = Enum.GetValues(typeof(MenuOptions)).Cast<MenuOptions>();
-            MenuRows = new ObservableCollection<MenuRowViewModel>(options.Select(option => new MenuRowViewModel(option)));
-
-            HighlightCurrent();
-        }
 
 
         public bool MenuActive
@@ -41,17 +30,16 @@ namespace UAV_Assistive_Operation.Models
                         row.Error = null;
                 }
             }
-            
         }
 
-        public string ToggleButtonText => IsSimulatorEnabled ? "Disable" : "Enable";
+        public string ToggleButtonText => IsToggleButtonEnabled ? "Disable" : "Enable";
 
-        public bool IsSimulatorEnabled
+        public bool IsToggleButtonEnabled
         {
-            get => _simulatorEnabled;
+            get => _toggleButtonEnabled;
             set
             {
-                if (Set(ref _simulatorEnabled, value))
+                if (Set(ref _toggleButtonEnabled, value))
                     OnPropertyChanged(nameof(ToggleButtonText));
             }
         }
@@ -66,6 +54,18 @@ namespace UAV_Assistive_Operation.Models
             }
         }
 
+
+        //Initialization
+        public MenuViewModel() 
+        {
+            var options = Enum.GetValues(typeof(MenuRowOptions)).Cast<MenuRowOptions>();
+            MenuRows = new ObservableCollection<MenuRowViewModel>(options.Select(option => new MenuRowViewModel(option)));
+
+            HighlightCurrent();
+        }
+
+
+        //Navigation methods
         public void MoveUp()
         {
             if (SelectedIndex > 0)
@@ -87,43 +87,78 @@ namespace UAV_Assistive_Operation.Models
                 if (index != SelectedIndex)
                     MenuRows[index].Error = null;
             }
+            ExitError = null;
+
             OnPropertyChanged(nameof(IsExitHighlighted));
-            OnPropertyChanged(nameof(ExitError));
         }
 
-        public bool CanExit => !_flightDataService.IsFlying;
-        public string ExitError => _flightDataService.IsFlying ? "Cannot exit while aircraft is flying." : null;
+
+        //Exit button methods
+        private bool _isExitPressed;
+        public bool IsExitPressed
+        {
+            get => _isExitPressed;
+            set => Set(ref _isExitPressed, value);
+        }
+
+        private string _exitError;
+        public string ExitError
+        {
+            get => _exitError;
+            set => Set(ref _exitError, value);
+        }
+
+
+        //Error handling
+        public void SetRowError(int index, string message)
+        {
+            if (index < 0 || index > MenuRows.Count)
+            {
+                return;
+            }
+            else if (index == MenuRows.Count)
+            {
+                ExitError = message;
+                return;
+            }
+            MenuRows[index].Error = message;
+        }
+
+
         public bool IsExitHighlighted => SelectedIndex == MenuRows.Count;
 
 
-        public event Action<int> ItemSelected;
+        //Selection processing
+        public event Action<MenuCommand, int> CommandRequested;
 
-        public void Select()
+        public async void Select()
         {
+            //Handling exit button
             if (SelectedIndex == MenuRows.Count)
             {
-                if (CanExit)
-                {
-                    Environment.Exit(0);
-                }
+                IsExitPressed = true;
+                await Task.Delay(150);
+                IsExitPressed = false;
+
+                CommandRequested?.Invoke(MenuCommand.ExitApplication, SelectedIndex);
                 return;
             }
 
+            //Handling menu rows
             var row = MenuRows[SelectedIndex];
             row.Error = null;
 
-            if (_flightDataService.IsFlying)
-            {
-                row.Error = $"Cannot {row.DisplayName} during flight";
-                return;
-            }
+            row.IsPressed = true;
+            await Task.Delay(150);
+            row.IsPressed = false;
 
-            if (row.MenuOption == MenuOptions.simulatorMode)
+            switch (SelectedIndex)
             {
-                IsSimulatorEnabled = !IsSimulatorEnabled;
+                case 0:
+                    CommandRequested?.Invoke(MenuCommand.ReconfigureController, SelectedIndex); break;
+                case 1:
+                    CommandRequested?.Invoke(MenuCommand.ToggleSimulator, SelectedIndex); break;
             }
-
-            ItemSelected?.Invoke(SelectedIndex);
         }
 
 

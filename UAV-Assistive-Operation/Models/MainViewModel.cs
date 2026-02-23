@@ -19,7 +19,7 @@ namespace UAV_Assistive_Operation.Models
         {
             ControllerConfiguration = new ControllerConfigurationViewModel(mappingService);
             FlightCommand = new FlightCommandViewModel();
-            Menu = new MenuViewModel(App.DJIFlightDataService);
+            Menu = new MenuViewModel();
         }
     }
 }

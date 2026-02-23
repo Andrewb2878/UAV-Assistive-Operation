@@ -16,6 +16,9 @@ namespace UAV_Assistive_Operation.Services
         //Bool value if all controls are assigned
         public bool IsFullyRemapped => _binding.Count == Enum.GetValues(typeof(ApplicationControls)).Length;
 
+        //Events
+        public event Action RemappingStateChanged;
+
 
         //Uses _binding to generate real-time control values
         public Dictionary<ApplicationControls, double> ProcessInput(bool[] buttons, double[] axes)
@@ -95,6 +98,7 @@ namespace UAV_Assistive_Operation.Services
                 autoAssignedControl = AssignOpposite(control, binding);
             }
 
+            RemappingStateChanged?.Invoke();
             return true;
         }
 
@@ -175,6 +179,13 @@ namespace UAV_Assistive_Operation.Services
                 }
                 
             }
+        }
+
+        public void ClearBindings()
+        {
+            _binding.Clear();
+            RemappingStateChanged?.Invoke();
+            EventLogService.Instance.Log(LogEventType.System, "Controller mappings cleared");
         }
     }
 }
