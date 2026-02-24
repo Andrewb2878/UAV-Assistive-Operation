@@ -71,12 +71,6 @@ namespace UAV_Assistive_Operation.Services
             EvaluateFlightStatus();
         }
 
-        private void SimulatorChanged(bool simulatorStarted)
-        {
-            _alertService.AlertState("Simulator", simulatorStarted, "Simulator Mode", 2);
-            EvaluateFlightStatus();
-        }
-
 
         //Setting values for alerts
         //Battery alerts
@@ -311,7 +305,6 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
-
         //Wind alerts
         private void WindWarningChanged(FCWindWarning level)
         {
@@ -328,6 +321,13 @@ namespace UAV_Assistive_Operation.Services
                 case FCWindWarning.UNKNOWN:
                     _alertService.AlertState("Wind", false, string.Empty, 6); break ;
             }
+        }
+
+        //Simulator alerts
+        private void SimulatorChanged(bool simulatorStarted)
+        {
+            _alertService.AlertState("Simulator", simulatorStarted, "Simulator Mode", 2);
+            EvaluateFlightStatus();
         }
 
 

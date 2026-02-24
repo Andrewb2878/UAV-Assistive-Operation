@@ -24,6 +24,7 @@ namespace UAV_Assistive_Operation.Services
 
         //EvaluationServices relevant events for services to subscribe to
         public event Action<bool> FlyingChanged;
+        public event Action<bool> LandingConfirmationChanged;
         public event Action<bool> SeriousBatteryChanged;
         public event Action<bool> LowBatteryChanged;
         public event Action<FCMotorStartFailureError> MotorStartFailureChanged;
@@ -54,6 +55,7 @@ namespace UAV_Assistive_Operation.Services
                 _flightControllerHandler.AttitudeChanged += AircraftAttitudeChanged;
 
                 _flightControllerHandler.IsFlyingChanged += AircraftFlyingChanged;
+                _flightControllerHandler.IsLandingConfirmationNeededChanged += LandingConfirmationNeededChanged;
                 _flightControllerHandler.IsSeriousLowBatteryWarningChanged += SeriousLowBattery;
                 _flightControllerHandler.IsLowBatteryWarningChanged += LowBattery;
                 _flightControllerHandler.MotorStartFailureErrorChanged += MotorStartFailure;
@@ -74,11 +76,14 @@ namespace UAV_Assistive_Operation.Services
                 _flightControllerHandler.AttitudeChanged -= AircraftAttitudeChanged;
 
                 _flightControllerHandler.IsFlyingChanged -= AircraftFlyingChanged;
+                _flightControllerHandler.IsLandingConfirmationNeededChanged -= LandingConfirmationNeededChanged;
                 _flightControllerHandler.IsSeriousLowBatteryWarningChanged -= SeriousLowBattery;
                 _flightControllerHandler.IsLowBatteryWarningChanged -= LowBattery;
                 _flightControllerHandler.MotorStartFailureErrorChanged -= MotorStartFailure;
                 _flightControllerHandler.HasNoEnoughForceChanged -= NotEnoughForce;
                 _flightControllerHandler.WindWarningChanged -= WindWarning;
+
+                _flightControllerHandler.IsSimulatorStartedChanged -= SimulatorStarted;
                 _flightControllerHandler = null;
             }
         }
@@ -122,6 +127,15 @@ namespace UAV_Assistive_Operation.Services
 
             IsFlying = value.Value.value;
             FlyingChanged?.Invoke(IsFlying);
+        }
+
+        private void LandingConfirmationNeededChanged(object sender, BoolMsg? value)
+        {
+            if (!IsAircraftConnected || value == null)
+                return;
+
+            var confirmation = value.Value.value;
+            LandingConfirmationChanged?.Invoke(confirmation);
         }
 
         private void SeriousLowBattery(object sender, BoolMsg? value)
