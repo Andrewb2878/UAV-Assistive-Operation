@@ -129,6 +129,7 @@
     <Compile Include="Enums\AxisPolarity.cs" />
     <Compile Include="Enums\InputMode.cs" />
     <Compile Include="Enums\InputTypes.cs" />
+    <Compile Include="Enums\LandingState.cs" />
     <Compile Include="Enums\LogEventType.cs" />
     <Compile Include="Enums\MapInitResult.cs" />
     <Compile Include="Enums\MenuCommand.cs" />

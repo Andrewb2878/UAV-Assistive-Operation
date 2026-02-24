@@ -1,7 +1,6 @@
 ﻿using DJI.WindowsSDK;
 using DJI.WindowsSDK.Components;
 using System;
-using System.Threading.Tasks;
 
 namespace UAV_Assistive_Operation.Services
 {

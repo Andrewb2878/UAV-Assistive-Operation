@@ -131,7 +131,7 @@ namespace UAV_Assistive_Operation.Services
             float pitch = CombineAxis(current, ApplicationControls.PitchForward, ApplicationControls.PitchBackward);
             float roll = CombineAxis(current, ApplicationControls.RollRight, ApplicationControls.RollLeft);
 
-            _flightControllerService.VirtualStickCommand(throttle, yaw, pitch, roll);
+            _flightControllerService.VirtualStickCommandAsync(throttle, yaw, pitch, roll);
         }
 
         private float CombineAxis(Dictionary<ApplicationControls, double> current, ApplicationControls positive,

@@ -26,7 +26,7 @@ namespace UAV_Assistive_Operation.Services
         private float _lastRoll;
         private const float StickChangeThreshold = 0.01f;
 
-        private bool _autoLanding = false;
+        private LandingState _landingState;
 
 
         public void AircraftConnected(DJIConnectionService connectionService, DJITelemetryService telemetryService,
@@ -37,7 +37,7 @@ namespace UAV_Assistive_Operation.Services
             _flightDataService = flightDataService;
 
             _flightDataService.LandingConfirmationChanged += LandingConfirmationChangedAsync;
-
+            _flightDataService.FlyingChanged += FlyingChanged;
             _flightDataService.NotEnoughForceChanged += NotEnoughForceDetected;
             _flightDataService.MotorStartFailureChanged += MotorStartFailureDetected;
             _flightDataService.SeriousBatteryChanged += SeriousBatteryDetected;
@@ -58,17 +58,17 @@ namespace UAV_Assistive_Operation.Services
             if (_flightDataService != null)
             {
                 _flightDataService.LandingConfirmationChanged -= LandingConfirmationChangedAsync;
-
+                _flightDataService.FlyingChanged -= FlyingChanged;
                 _flightDataService.NotEnoughForceChanged -= NotEnoughForceDetected;
                 _flightDataService.MotorStartFailureChanged -= MotorStartFailureDetected;
                 _flightDataService.SeriousBatteryChanged -= SeriousBatteryDetected;
             }
 
             _isConfigured = false;
-            _autoLanding = false;
             _flightController = null;
             _flightAssistant = null;
             _virtualController = null;
+            _landingState = LandingState.None;
 
             _lastThrottle = 0f;
             _lastYaw = 0f;
@@ -157,7 +157,16 @@ namespace UAV_Assistive_Operation.Services
         private async void SeriousBatteryDetected(bool seriousBattery)
         {
             if (_flightDataService.IsFlying)
+            {
+                _landingState = LandingState.RequiredLanding;
                 await LandAsync(false);
+            }
+        }
+
+        private void FlyingChanged(bool flying)
+        {
+            if (!flying)
+                _landingState = LandingState.None;
         }
 
 
@@ -188,7 +197,8 @@ namespace UAV_Assistive_Operation.Services
 
         public async Task LandAsync(bool logResult=true)
         {
-            _autoLanding = true;
+            if (_landingState != LandingState.RequiredLanding)
+                _landingState = LandingState.UserLanding;
             await ExecuteFlightCommandAsync(() => _flightController.StartAutoLandingAsync(), "landing", logResult);
         }
 
@@ -199,13 +209,18 @@ namespace UAV_Assistive_Operation.Services
 
             _virtualController.UpdateJoystickValue(0f, 0f, 0f, 0f);
 
-            _ = await _flightController.StopTakeoffAsync();
-            _ = await _flightController.StopAutoLandingAsync();
-            _autoLanding = false;
+            await _flightController.StopTakeoffAsync();
+            if (_landingState == LandingState.RequiredLanding)
+                return;
+            
+            await _flightController.StopAutoLandingAsync();
+            _landingState = LandingState.None;           
         }
 
-        public void VirtualStickCommand(float throttle, float yaw, float pitch, float roll)
+        public async void VirtualStickCommandAsync(float throttle, float yaw, float pitch, float roll)
         {
+            if (_landingState == LandingState.RequiredLanding)
+                return;
             if (_flightDataService == null || !_flightDataService.IsFlying)
                 return;
             if (!ValidateCommandExecution())
@@ -216,8 +231,14 @@ namespace UAV_Assistive_Operation.Services
             pitch = Math.Clamp(pitch, -1f, 1f);
             roll = Math.Clamp(roll, -1f, 1f);
 
-            if (!HasStickChanged(throttle, yaw, pitch, roll))
+            bool changed = HasStickChanged(throttle, yaw, pitch, roll);
+            if (!changed)
                 return;
+            if (_landingState == LandingState.UserLanding)
+            {
+                _landingState = LandingState.None;
+                await _flightController.StopAutoLandingAsync();
+            }
 
             _virtualController.UpdateJoystickValue(throttle, yaw, pitch, roll);
 
@@ -238,9 +259,9 @@ namespace UAV_Assistive_Operation.Services
         //Landing management
         private async void LandingConfirmationChangedAsync(bool landingConfirmation)
         {
-            if (_autoLanding && landingConfirmation)
+            if (_landingState != LandingState.None && landingConfirmation)
             {
-                _autoLanding = false;
+                _landingState = LandingState.None;
                 await ExecuteFlightCommandAsync(() => _flightController.ConfirmLandingAsync(), "landing", false);
             }
         }
