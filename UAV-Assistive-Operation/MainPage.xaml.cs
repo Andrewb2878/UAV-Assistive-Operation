@@ -261,8 +261,8 @@ namespace UAV_Assistive_Operation
             EvaluatePopupState();
             EventLogService.Instance.Log(LogEventType.System, "Controller reconfiguration started...");
 
-            await Task.Delay(50);
-            RemapScrollViewer.ChangeView(null, 0, null);
+            await Task.Delay(70);
+            UpdateScrollPosition();
         }
 
         private async void HandleToggleSimulator()

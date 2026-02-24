@@ -13,6 +13,7 @@ namespace UAV_Assistive_Operation.Models
 
         public AlertService Alerts => App.AlertService;
         public DJITelemetryService Telemetry => App.DJITelemetryService;
+        public DJIFlightDataService FlightData => App.DJIFlightDataService;
         public ObservableCollection<LogEntryModel> EventLog => EventLogService.Instance.LogEntries;
 
 

@@ -26,6 +26,7 @@ namespace UAV_Assistive_Operation.Services
         private float _lastRoll;
         private const float StickChangeThreshold = 0.01f;
 
+        private bool _motorStartFailure = false;
         private LandingState _landingState;
 
 
@@ -65,6 +66,7 @@ namespace UAV_Assistive_Operation.Services
             }
 
             _isConfigured = false;
+            _motorStartFailure = false;
             _flightController = null;
             _flightAssistant = null;
             _virtualController = null;
@@ -151,7 +153,15 @@ namespace UAV_Assistive_Operation.Services
             if (error != FCMotorStartFailureError.NONE &&
                 error != FCMotorStartFailureError.SIMULATOR_MODE &&
                 error != FCMotorStartFailureError.SIMULATOR_STARTED)
-                await StopAsync();
+            {
+                _motorStartFailure = true;
+                await StopAsync(false);
+            }
+            else if (error == FCMotorStartFailureError.NONE)
+            {
+                _motorStartFailure = false;
+            }
+                
         }
 
         private async void SeriousBatteryDetected(bool seriousBattery)
@@ -202,9 +212,9 @@ namespace UAV_Assistive_Operation.Services
             await ExecuteFlightCommandAsync(() => _flightController.StartAutoLandingAsync(), "landing", logResult);
         }
 
-        public async Task StopAsync()
+        public async Task StopAsync(bool logResult=true)
         {
-            if (!ValidateCommandExecution())
+            if (!ValidateCommandExecution(logResult))
                 return;
 
             _virtualController.UpdateJoystickValue(0f, 0f, 0f, 0f);
@@ -222,7 +232,10 @@ namespace UAV_Assistive_Operation.Services
             if (_landingState == LandingState.RequiredLanding)
                 return;
             if (_flightDataService == null || !_flightDataService.IsFlying)
-                return;
+            {
+                EventLogService.Instance.Log(LogEventType.Warning, "Aircraft not flying: cannot perform action");
+                    return;
+            }
             if (!ValidateCommandExecution())
                 return;
 
@@ -268,8 +281,16 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Aircraft command validation method
-        private bool ValidateCommandExecution()
+        private bool ValidateCommandExecution(bool logResult=true)
         {
+            if (_motorStartFailure)
+            {
+                if (logResult)                
+                    EventLogService.Instance.Log(LogEventType.Warning, "Flight operations disabled");
+                
+                return false;
+            }
+
             //Ensures sufficient battery for flight
             if (_isConfigured && (_flightDataService.IsLowBattery || _flightDataService.IsSeriousLowBattery) &&
                 !_flightDataService.IsFlying)
@@ -280,7 +301,9 @@ namespace UAV_Assistive_Operation.Services
             //Ensures sufficient GPS signal before flight
             if (_isConfigured && !_telemetryService.GPS.SufficientForFlight && !_flightDataService.IsFlying)
             {
-                EventLogService.Instance.Log(LogEventType.Warning, "Low GPS: flight operations disabled");
+                if (logResult)
+                    EventLogService.Instance.Log(LogEventType.Warning, "Low GPS: flight operations disabled");
+                
                 return false;
             }
 

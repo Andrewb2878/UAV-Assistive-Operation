@@ -356,6 +356,26 @@
             d:DesignHeight="600"
             d:DefaultBackgroundColor="Gray" />
 
+            <StackPanel
+                HorizontalAlignment="Right"
+                Visibility="{Binding Menu.IsToggleButtonEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                
+                <Border 
+                    Margin="10"
+                    Background="White"
+                    BorderBrush="Black"
+                    BorderThickness="2"
+                    CornerRadius="8">
+
+                    <TextBlock 
+                    Margin="10,5"
+                    Text="{Binding FlightData.Location.DisplayText}"
+                    FontWeight="SemiBold"
+                    FontSize="16" />
+                </Border>
+            </StackPanel>
+            
+
             <Grid x:Name="MapFallback" Visibility="Visible" Background="DarkGray">
                 <TextBlock 
                     Text="Map Service Unavailable"
@@ -364,7 +384,7 @@
                     FontWeight="SemiBold"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    TextAlignment="Center"/>
+                    TextAlignment="Center" />
             </Grid>
         </Grid>
 

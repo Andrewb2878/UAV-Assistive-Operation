@@ -151,6 +151,7 @@
     <Compile Include="Models\FlightModeTelemetryModel.cs" />
     <Compile Include="Models\GPSStrengthTelemetryModel.cs" />
     <Compile Include="Models\InputBindingModel.cs" />
+    <Compile Include="Models\LocationFlightDataModel.cs" />
     <Compile Include="Models\LogEntryModel.cs" />
     <Compile Include="Models\MainViewModel.cs" />
     <Compile Include="Models\MenuRowViewModel.cs" />

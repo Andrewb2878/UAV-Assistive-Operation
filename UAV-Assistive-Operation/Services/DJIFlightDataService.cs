@@ -1,6 +1,7 @@
 ﻿using DJI.WindowsSDK;
 using DJI.WindowsSDK.Components;
 using System;
+using UAV_Assistive_Operation.Models;
 
 namespace UAV_Assistive_Operation.Services
 {
@@ -15,6 +16,8 @@ namespace UAV_Assistive_Operation.Services
         public bool IsSeriousLowBattery { get; private set; }
         public bool IsLowBattery { get; private set; }
         public bool IsSimulatorStarted { get; private set; }
+
+        public LocationFlightDataModel Location { get; } = new LocationFlightDataModel();
 
 
         //MapService relevant events for services to subscribe to
@@ -100,14 +103,21 @@ namespace UAV_Assistive_Operation.Services
 
 
         //Getting updates from subscriptions
-        private void AircraftLocationChanged(object sender, LocationCoordinate2D? value)
+        private async void AircraftLocationChanged(object sender, LocationCoordinate2D? value)
         {
             if (!IsAircraftConnected || value == null)
                 return;
 
             var lat = value.Value.latitude; 
             var lon = value.Value.longitude;
-           UavLocationUpdated?.Invoke(lat, lon);
+
+            UavLocationUpdated?.Invoke(lat, lon);
+
+            await App.RunOnUIThread(() =>
+            {
+                Location.Latitude = lat;
+                Location.Longitude = lon;
+            });
         }
 
         private void AircraftAttitudeChanged(object sender, Attitude? attitude)
