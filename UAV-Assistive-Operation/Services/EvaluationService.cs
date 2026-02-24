@@ -37,6 +37,7 @@ namespace UAV_Assistive_Operation.Services
             _flightDataService.LowBatteryChanged += LowBatteryChanged;
             _flightDataService.MotorStartFailureChanged += MotorStartFailureChanged;
             _flightDataService.WindWarningChanged += WindWarningChanged;
+            _flightDataService.SimulatorStartedChanged += SimulatorChanged;
 
             _controllerService.GamepadConnected += ControllerConnected;
             _controllerService.GamepadDisconnected += ControllerDisconnected;
@@ -67,6 +68,12 @@ namespace UAV_Assistive_Operation.Services
             if (args.PropertyName != nameof(GPSStrengthTelemetryModel.SufficientForFlight))
                 return;
 
+            EvaluateFlightStatus();
+        }
+
+        private void SimulatorChanged(bool simulatorStarted)
+        {
+            _alertService.AlertState("Simulator", simulatorStarted, "Simulator Mode", 2);
             EvaluateFlightStatus();
         }
 
@@ -128,7 +135,7 @@ namespace UAV_Assistive_Operation.Services
                 return;
             }
 
-            string errorMsg;
+            string errorMsg = "";
 
             switch (error)
             {
@@ -202,7 +209,7 @@ namespace UAV_Assistive_Operation.Services
                     errorMsg = "Temperature too Low: Cannot Takeoff"; break;
                 case FCMotorStartFailureError.SIMULATOR_MODE:
                 case FCMotorStartFailureError.SIMULATOR_STARTED:
-                    errorMsg = "Simulator Mode Active"; break;
+                    break;
                 case FCMotorStartFailureError.IN_TRANSPORT_MODE:
                     errorMsg = "Transport Mode: Cannot Takeoff"; break;
                 case FCMotorStartFailureError.NOT_ACTIVATED:
@@ -296,9 +303,14 @@ namespace UAV_Assistive_Operation.Services
                 default:
                     errorMsg = "Unknown Motor Error"; break;
             }
-            _alertService.AlertState("MotorStart", true, errorMsg, 2);
-            EventLogService.Instance.Log(Enums.LogEventType.Error, errorMsg);
+
+            if (!string.IsNullOrEmpty(errorMsg))
+            {
+                _alertService.AlertState("MotorStart", true, errorMsg, 2);
+                EventLogService.Instance.Log(Enums.LogEventType.Error, errorMsg);
+            }
         }
+
 
         //Wind alerts
         private void WindWarningChanged(FCWindWarning level)

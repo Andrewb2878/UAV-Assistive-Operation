@@ -141,7 +141,9 @@ namespace UAV_Assistive_Operation.Services
 
        private async void MotorStartFailureDetected(FCMotorStartFailureError error)
         {
-            if (error != FCMotorStartFailureError.NONE)
+            if (error != FCMotorStartFailureError.NONE &&
+                error != FCMotorStartFailureError.SIMULATOR_MODE &&
+                error != FCMotorStartFailureError.SIMULATOR_STARTED)
                 await StopAsync();
         }
 
@@ -167,7 +169,7 @@ namespace UAV_Assistive_Operation.Services
             }
             else if (logResult)
             {
-                EventLogService.Instance.Log(LogEventType.Info, $"Aircraft {commandName} successful");
+                EventLogService.Instance.Log(LogEventType.Info, $"Aircraft started {commandName} successfully");
             }
         }
 

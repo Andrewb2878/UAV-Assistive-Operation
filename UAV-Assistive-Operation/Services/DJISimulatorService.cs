@@ -11,7 +11,10 @@ namespace UAV_Assistive_Operation.Services
     public class DJISimulatorService
     {
         private FlightControllerHandler _flightControllerHandler;
-        private SimulatorInitializationSettings _simulatorSettings;
+        private SimulatorInitializationSettings? _simulatorSettings;
+
+        //Events
+        public event Action<bool> SimulatorStateChanged;
 
 
         public void AircraftConnected()
@@ -62,7 +65,7 @@ namespace UAV_Assistive_Operation.Services
             if (_flightControllerHandler == null)
                 return;
 
-            var result = await _flightControllerHandler.StartSimulatorAsync(_simulatorSettings);
+            var result = await _flightControllerHandler.StartSimulatorAsync(_simulatorSettings.Value);
             var message = DJIErrorDecoderModel.GetErrorMessage(result);
 
             if (message != null)
@@ -71,6 +74,7 @@ namespace UAV_Assistive_Operation.Services
                 return;
             }
             EventLogService.Instance.Log(LogEventType.System, "Simulator started");
+            SimulatorStateChanged?.Invoke(true);
         }
 
         public async Task StopSimulatorAsync()
@@ -87,6 +91,8 @@ namespace UAV_Assistive_Operation.Services
                 return;
             }
             EventLogService.Instance.Log(LogEventType.System, "Simulator stopped");
+            _simulatorSettings = null;
+            SimulatorStateChanged?.Invoke(false);
         }
     }
 }

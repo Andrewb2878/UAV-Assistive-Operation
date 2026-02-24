@@ -1,6 +1,7 @@
 ﻿using DJI.WindowsSDK;
 using DJI.WindowsSDK.Components;
 using System;
+using System.Threading.Tasks;
 
 namespace UAV_Assistive_Operation.Services
 {
@@ -14,6 +15,7 @@ namespace UAV_Assistive_Operation.Services
         public bool IsFlying {  get; private set; }
         public bool IsSeriousLowBattery { get; private set; }
         public bool IsLowBattery { get; private set; }
+        public bool IsSimulatorStarted { get; private set; }
 
 
         //MapService relevant events for services to subscribe to
@@ -27,6 +29,7 @@ namespace UAV_Assistive_Operation.Services
         public event Action<FCMotorStartFailureError> MotorStartFailureChanged;
         public event Action<bool> NotEnoughForceChanged;
         public event Action<FCWindWarning> WindWarningChanged;
+        public event Action<bool> SimulatorStartedChanged;
 
         public void AircraftConnected()
         {
@@ -56,6 +59,8 @@ namespace UAV_Assistive_Operation.Services
                 _flightControllerHandler.MotorStartFailureErrorChanged += MotorStartFailure;
                 _flightControllerHandler.HasNoEnoughForceChanged += NotEnoughForce;
                 _flightControllerHandler.WindWarningChanged += WindWarning;
+
+                _flightControllerHandler.IsSimulatorStartedChanged += SimulatorStarted;
             }
         }
 
@@ -162,6 +167,16 @@ namespace UAV_Assistive_Operation.Services
 
             var level = value.Value.value;
             WindWarningChanged.Invoke(level);
+        }
+
+
+        private void SimulatorStarted(object sender, BoolMsg? value) 
+        {
+            if (!IsAircraftConnected || value == null)
+                return;
+
+            IsSimulatorStarted = value.Value.value;
+            SimulatorStartedChanged?.Invoke(IsSimulatorStarted);
         }
 
         //Method to check if aircraft can be configured

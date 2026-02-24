@@ -82,6 +82,11 @@ namespace UAV_Assistive_Operation
             ViewModel.Menu.CommandRequested += MenuCommandRequested;
             ViewModel.SimulatorWarning.CommandRequested += SimulatorCommandRequested;
 
+            App.DJISimulatorService.SimulatorStateChanged += isRunning =>
+            {
+                ViewModel.Menu.IsToggleButtonEnabled = isRunning;
+            };
+
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
             {
                 await _mapService.UpdateUavLocation(lat, lon);
@@ -262,9 +267,7 @@ namespace UAV_Assistive_Operation
 
         private async void HandleToggleSimulator()
         {
-            ViewModel.Menu.IsToggleButtonEnabled = !ViewModel.Menu.IsToggleButtonEnabled;
-
-            if (ViewModel.Menu.IsToggleButtonEnabled)
+            if (!ViewModel.Menu.IsToggleButtonEnabled)
             {
                 ViewModel.SimulatorWarning.MenuActive = true;
                 await App.DJISimulatorService.InitializeSimulatorAsync();
@@ -272,7 +275,6 @@ namespace UAV_Assistive_Operation
             else
             {
                 _ = App.DJISimulatorService.StopSimulatorAsync();
-                EventLogService.Instance.Log(LogEventType.System, "Simulator stopped");
             }
             ViewModel.Menu.MenuActive = false;
             EvaluatePopupState();
