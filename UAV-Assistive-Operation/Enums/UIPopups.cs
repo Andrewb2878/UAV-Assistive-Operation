@@ -6,6 +6,7 @@
         ControllerRequired,
         ControllerRemapping,
         AircraftRequired,
-        Menu
+        Menu,
+        SimulatorWarning
     }
 }

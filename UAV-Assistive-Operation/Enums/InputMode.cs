@@ -3,6 +3,7 @@
     public enum InputMode
     {
         Flight,
-        Menu
+        Menu,
+        SimWarning
     }
 }

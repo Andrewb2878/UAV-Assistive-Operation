@@ -38,7 +38,7 @@ namespace UAV_Assistive_Operation.Services
             }
 
             double latitude = 51.50141;
-            double longitiude = -0.14208;
+            double longitude = -0.14208;
             bool locationSuccess = true;
 
             try
@@ -46,7 +46,7 @@ namespace UAV_Assistive_Operation.Services
                 var geoLocator = new Geolocator { DesiredAccuracy = PositionAccuracy.High };
                 var position = await geoLocator.GetGeopositionAsync();
                 latitude = position.Coordinate.Point.Position.Latitude;
-                longitiude = position.Coordinate.Point.Position.Longitude;
+                longitude = position.Coordinate.Point.Position.Longitude;
             }
             catch 
             {
@@ -54,7 +54,7 @@ namespace UAV_Assistive_Operation.Services
                 EventLogService.Instance.Log(LogEventType.Error, "MapService: Location failed");
             }
 
-            string url = $"ms-appx-web:///Assets/Map/LeafletMap.html?lat={latitude}&lon={longitiude}";
+            string url = $"ms-appx-web:///Assets/Map/LeafletMap.html?lat={latitude}&lon={longitude}";
             _mapView.Source = new Uri(url);
 
             return locationSuccess ? MapInitResult.success : MapInitResult.failure;

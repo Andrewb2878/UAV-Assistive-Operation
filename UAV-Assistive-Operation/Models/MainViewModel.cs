@@ -9,6 +9,7 @@ namespace UAV_Assistive_Operation.Models
         public FlightCommandViewModel FlightCommand { get; }
 
         public MenuViewModel Menu { get; }
+        public SimulatorWarningViewModel SimulatorWarning { get; }
 
         public AlertService Alerts => App.AlertService;
         public DJITelemetryService Telemetry => App.DJITelemetryService;
@@ -20,6 +21,7 @@ namespace UAV_Assistive_Operation.Models
             ControllerConfiguration = new ControllerConfigurationViewModel(mappingService);
             FlightCommand = new FlightCommandViewModel();
             Menu = new MenuViewModel();
+            SimulatorWarning = new SimulatorWarningViewModel();
         }
     }
 }

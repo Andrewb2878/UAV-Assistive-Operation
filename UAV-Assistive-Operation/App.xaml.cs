@@ -20,6 +20,7 @@ namespace UAV_Assistive_Operation
         public static DJITelemetryService DJITelemetryService { get; private set; }
         public static DJIFlightDataService DJIFlightDataService { get; private set; }
         public static DJIFlightControllerService DJIFlightControllerService { get; private set; }
+        public static DJISimulatorService DJISimulatorService { get; private set; }
         public static ControllerService ControllerService { get; private set; }
         public static AlertService AlertService { get; internal set; }
         public static EvaluationService EvaluationService { get; private set; }
@@ -84,6 +85,7 @@ namespace UAV_Assistive_Operation
             DJITelemetryService = new DJITelemetryService();
             DJIFlightDataService = new DJIFlightDataService();
             DJIFlightControllerService = new DJIFlightControllerService();
+            DJISimulatorService = new DJISimulatorService();
             AlertService = new AlertService();
             EvaluationService = new EvaluationService(DJIConnectionService, DJITelemetryService,
                                                         DJIFlightDataService, ControllerService, AlertService);
@@ -94,10 +96,13 @@ namespace UAV_Assistive_Operation
             DJIConnectionService.AircraftConnected += () => DJIFlightControllerService.AircraftConnected(DJIConnectionService,
                                                                                                         DJITelemetryService,
                                                                                                         DJIFlightDataService);
+            DJIConnectionService.AircraftConnected += DJISimulatorService.AircraftConnected;
+
 
             DJIConnectionService.AircraftDisconnected += DJITelemetryService.AircraftDisconnected;
             DJIConnectionService.AircraftDisconnected += DJIFlightDataService.AircraftDisconnected;
             DJIConnectionService.AircraftDisconnected += DJIFlightControllerService.AircraftDisconnected;
+            DJIConnectionService.AircraftDisconnected += DJISimulatorService.AircraftDisconnected;
 
             
             if (e.PrelaunchActivated == false)

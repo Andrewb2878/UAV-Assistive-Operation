@@ -202,7 +202,7 @@ namespace UAV_Assistive_Operation.Services
                     errorMsg = "Temperature too Low: Cannot Takeoff"; break;
                 case FCMotorStartFailureError.SIMULATOR_MODE:
                 case FCMotorStartFailureError.SIMULATOR_STARTED:
-                    errorMsg = "Simulator Mode: Cannot Takeoff"; break;
+                    errorMsg = "Simulator Mode Active"; break;
                 case FCMotorStartFailureError.IN_TRANSPORT_MODE:
                     errorMsg = "Transport Mode: Cannot Takeoff"; break;
                 case FCMotorStartFailureError.NOT_ACTIVATED:

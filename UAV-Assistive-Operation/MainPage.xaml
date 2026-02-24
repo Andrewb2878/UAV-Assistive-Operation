@@ -305,6 +305,44 @@
 
             </StackPanel>
         </ContentDialog>
+        
+        <!--Simulator warning popup-->
+        <ContentDialog
+            x:Name="SimulatorWarningPopup"
+            Title="Warning"
+            PrimaryButtonText=""
+            IsPrimaryButtonEnabled="False"
+            DefaultButton="None">
+
+            <StackPanel>
+                <TextBlock
+                    Text="Please remove propellers before starting the flight simulator."
+                    TextWrapping="Wrap" />
+
+                <Grid Margin="0,40,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border
+                        Background="#FFE0E0E0"
+                        CornerRadius="10"
+                        Padding="22" />
+
+                    <Button
+                        Content="Continue"
+                        Width="180"
+                        HorizontalAlignment="Center"
+                        IsHitTestVisible="False"
+                        IsTabStop="False"
+                        BorderBrush="SlateGray"
+                        Background="{Binding SimulatorWarning.IsContinuePressed, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}"
+                        CornerRadius="8"/>
+                </Grid>
+            </StackPanel>
+
+
+        </ContentDialog>
 
 
         <!--UAV map-->

@@ -12,6 +12,7 @@ namespace UAV_Assistive_Operation.Services
         private readonly DJIFlightControllerService _flightControllerService;
         private readonly FlightCommandViewModel _flightCommand;
         private readonly MenuViewModel _menuViewModel;
+        private readonly SimulatorWarningViewModel _simulatorWarningViewModel;
 
         //States
         private InputMode _mode = InputMode.Flight;
@@ -24,12 +25,14 @@ namespace UAV_Assistive_Operation.Services
 
 
         public ControllerProcessingService(ControllerMappingService mappingService, 
-            DJIFlightControllerService flightControllerService, FlightCommandViewModel flightCommand, MenuViewModel menuViewModel)
+            DJIFlightControllerService flightControllerService, FlightCommandViewModel flightCommand, MenuViewModel menuViewModel,
+            SimulatorWarningViewModel simulatorWarningViewModel)
         {
             _mappingService = mappingService;
             _flightControllerService = flightControllerService;
             _flightCommand = flightCommand;
             _menuViewModel = menuViewModel;
+            _simulatorWarningViewModel = simulatorWarningViewModel;
         }
 
         public void Start()
@@ -70,6 +73,8 @@ namespace UAV_Assistive_Operation.Services
                     HandleFlight(current); break;
                 case InputMode.Menu:
                     HandleMenuNavigation(current); break;
+                case InputMode.SimWarning:
+                    HandleCommand(ApplicationControls.Select, current, () => _simulatorWarningViewModel.Select()); break;
             }
         }
 
@@ -164,15 +169,6 @@ namespace UAV_Assistive_Operation.Services
             HandleCommand(ApplicationControls.Select, current, () => _menuViewModel.Select());
 
             HandleMenuToggle(current);
-        }
-
-        private void HandleMenuCommand(ApplicationControls control, bool isPressed, Action action)
-        {
-            _previousState.TryGetValue(control, out var wasPressed);
-            if (isPressed && !wasPressed)
-                action();
-
-            _previousState[control] = isPressed;
         }
     }
 }

@@ -27,6 +27,7 @@ namespace UAV_Assistive_Operation
         private bool _startedConfiguration = false;
         private bool _completingConfiguration = false;
         private bool _completedFirstAircraftConnection = false;
+        private bool _showSimulatorWarning = false;
         public MainViewModel ViewModel { get; }
 
 
@@ -35,6 +36,7 @@ namespace UAV_Assistive_Operation
         private bool IsControllerRemapped => _mappingService.IsFullyRemapped;
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
         private bool IsMenuOpen => ViewModel.Menu.MenuActive;
+        private bool IsSimWarningOpen => ViewModel.SimulatorWarning.MenuActive;
         
 
 
@@ -53,10 +55,11 @@ namespace UAV_Assistive_Operation
             ViewModel.Menu.PropertyChanged += Menu_PropertyChanged;
 
             _processingService = new ControllerProcessingService(_mappingService, App.DJIFlightControllerService,
-                ViewModel.FlightCommand, ViewModel.Menu);
+                ViewModel.FlightCommand, ViewModel.Menu, ViewModel.SimulatorWarning);
             _mapService = new MapService(MapView);
             _popupService = new UIPopupService();
-            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup, MenuPopup);
+            _popupService.RegisterPopups(ControllerRequiredPopup, ControllerRemappingPopup, AircraftRequiredPopup, MenuPopup,
+                SimulatorWarningPopup);
 
 
             //Setup subscriptions
@@ -77,6 +80,7 @@ namespace UAV_Assistive_Operation
             App.DJIConnectionService.AircraftConnected += AircraftConnected;
 
             ViewModel.Menu.CommandRequested += MenuCommandRequested;
+            ViewModel.SimulatorWarning.CommandRequested += SimulatorCommandRequested;
 
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
             {
@@ -100,14 +104,7 @@ namespace UAV_Assistive_Operation
             if (e.PropertyName == nameof(ViewModel.Menu.MenuActive))
             {
                 if (ViewModel.Menu.MenuActive)
-                {
                     ViewModel.Menu.SelectedIndex = 0;
-                    _processingService.SetMode(InputMode.Menu);
-                }
-                else
-                {
-                    _processingService.SetMode(InputMode.Flight);
-                }
 
                 EvaluatePopupState();
             }
@@ -117,6 +114,15 @@ namespace UAV_Assistive_Operation
         //UI popup methods        
         private void EvaluatePopupState()
         {
+            //Setting input mode
+            if (ViewModel.SimulatorWarning.MenuActive)
+                _processingService.SetMode(InputMode.SimWarning);
+            else if (ViewModel.Menu.MenuActive)            
+                _processingService.SetMode(InputMode.Menu);            
+            else
+                _processingService.SetMode(InputMode.Flight);
+
+            //Setting popup visibility
             if (!IsControllerConnected)
             {
                 _popupService.ShowPopup(UIPopups.ControllerRequired);
@@ -133,6 +139,10 @@ namespace UAV_Assistive_Operation
             else if (IsMenuOpen)
             {
                 _popupService.ShowPopup(UIPopups.Menu);
+            }
+            else if (IsSimWarningOpen)
+            {
+                _popupService.ShowPopup(UIPopups.SimulatorWarning);
             }
             else
             {
@@ -196,7 +206,7 @@ namespace UAV_Assistive_Operation
                 _processingService.Start();
 
                 await Task.Delay(5000);
-                EventLogService.Instance.Log(LogEventType.System, $"Controller configured");
+                EventLogService.Instance.Log(LogEventType.System, "Controller configured");
                 _completingConfiguration = false;
 
                 EvaluatePopupState();
@@ -223,7 +233,13 @@ namespace UAV_Assistive_Operation
                 case MenuCommand.ReconfigureController:
                     _ = HandleReconfigAsync(); break;
                 case MenuCommand.ToggleSimulator:
-                    HandleToggleSimulator(); break;
+                    if (!App.DJIConnectionService.IsAircraftConnected && !ViewModel.Menu.IsToggleButtonEnabled)
+                    {
+                        ViewModel.Menu.SetRowError(index, "Aircraft must be connected to start simulator mode");
+                        return;
+                    }
+                    HandleToggleSimulator();
+                    break;
                 case MenuCommand.ExitApplication:
                     HandleExit(); break;
             }
@@ -244,14 +260,36 @@ namespace UAV_Assistive_Operation
             RemapScrollViewer.ChangeView(null, 0, null);
         }
 
-        private void HandleToggleSimulator()
+        private async void HandleToggleSimulator()
         {
             ViewModel.Menu.IsToggleButtonEnabled = !ViewModel.Menu.IsToggleButtonEnabled;
+
+            if (ViewModel.Menu.IsToggleButtonEnabled)
+            {
+                ViewModel.SimulatorWarning.MenuActive = true;
+                await App.DJISimulatorService.InitializeSimulatorAsync();
+            }
+            else
+            {
+                _ = App.DJISimulatorService.StopSimulatorAsync();
+                EventLogService.Instance.Log(LogEventType.System, "Simulator stopped");
+            }
+            ViewModel.Menu.MenuActive = false;
+            EvaluatePopupState();
         }
 
         private void HandleExit()
         {
             Application.Current.Exit();
+        }
+
+
+        private void SimulatorCommandRequested()
+        {
+            ViewModel.SimulatorWarning.MenuActive = false;
+            _ = App.DJISimulatorService.StartSimulatorAsync();
+
+            EvaluatePopupState();
         }
 
 
