@@ -15,6 +15,8 @@ namespace UAV_Assistive_Operation.Models
 
         //States
         private int _currentRemapIndex = 0;
+        public int TotalControls => RemapRows.Count;
+        public int ConfiguredControls => RemapRows.Count(rows => rows.AssignedInput != ControllerConfigurationRowViewModel.DefaultWaitingText);
         public bool IsFullyRemapped => _mappingService.IsFullyRemapped;
 
         //Properties
@@ -48,6 +50,7 @@ namespace UAV_Assistive_Operation.Models
                 row.IsHighlighted = false;
             }
             OnPropertyChanged(nameof(CurrentRow));
+            OnPropertyChanged(nameof(ProgressText));
             HighlightCurrentRow();
         }
 
@@ -104,6 +107,7 @@ namespace UAV_Assistive_Operation.Models
             _currentRemapIndex = nextIndex;
 
             OnPropertyChanged(nameof(CurrentRow));
+            OnPropertyChanged(nameof(ProgressText));
             HighlightCurrentRow();
             return true;
         }
@@ -118,6 +122,10 @@ namespace UAV_Assistive_Operation.Models
         {
             OnPropertyChanged(nameof(IsFullyRemapped));
         }
+
+
+        //UI
+        public string ProgressText => $"{ConfiguredControls} / {TotalControls} controls configured";
 
 
         public event PropertyChangedEventHandler PropertyChanged;

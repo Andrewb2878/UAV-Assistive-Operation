@@ -159,21 +159,32 @@
                 </ListView>
 
                 <!--Progress bar-->
-                <StackPanel Grid.Row="2" Spacing="8" Margin="0,12,0,0">
+                <StackPanel 
+                    Grid.Row="2"
+                    Spacing="8"
+                    Margin="0,12,0,0"
+                    Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}}">
+                    
                     <TextBlock
                         x:Name="RemapProgressText"
                         Text="Setting inputs..."
-                        HorizontalAlignment="Center"
-                        Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        HorizontalAlignment="Center"/>
 
                     <ProgressBar
                         x:Name="RemapProgressBar"
                         IsIndeterminate="True"
                         Height="6"
-                        Margin="10,0"
-                        Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        Margin="10,0"/>
                 </StackPanel>
+
+                <TextBlock
+                    Grid.Row="2"
+                    Margin="0,12,0,0"
+                    Text="{Binding ControllerConfiguration.ProgressText}"
+                    HorizontalAlignment="Center"
+                    Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
             </Grid>
+            
 
         </ContentDialog>
 
