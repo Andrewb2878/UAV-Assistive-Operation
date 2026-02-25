@@ -17,6 +17,8 @@ namespace UAV_Assistive_Operation.Services
         private DJITelemetryService _telemetryService;
         private DJIFlightDataService _flightDataService;
 
+        private ControllerService _controllerService;
+
         private bool _isConfigured;
         private int _configAttempts;
 
@@ -32,17 +34,20 @@ namespace UAV_Assistive_Operation.Services
 
 
         public void AircraftConnected(DJIConnectionService connectionService, DJITelemetryService telemetryService,
-            DJIFlightDataService flightDataService)
+            DJIFlightDataService flightDataService, ControllerService controllerService)
         {
             _connectionService = connectionService;
             _telemetryService = telemetryService;
             _flightDataService = flightDataService;
+            _controllerService = controllerService;
 
             _flightDataService.LandingConfirmationChanged += LandingConfirmationChangedAsync;
             _flightDataService.FlyingChanged += FlyingChanged;
             _flightDataService.NotEnoughForceChanged += NotEnoughForceDetected;
             _flightDataService.MotorStartFailureChanged += MotorStartFailureDetected;
             _flightDataService.SeriousBatteryChanged += SeriousBatteryDetected;
+
+            _controllerService.GamepadDisconnected += ControllerDisconnected;
 
             _flightController = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0);
             _flightAssistant = DJISDKManager.Instance.ComponentManager.GetFlightAssistantHandler(0, 0);
@@ -65,6 +70,8 @@ namespace UAV_Assistive_Operation.Services
                 _flightDataService.MotorStartFailureChanged -= MotorStartFailureDetected;
                 _flightDataService.SeriousBatteryChanged -= SeriousBatteryDetected;
             }
+
+            _controllerService.GamepadDisconnected -= ControllerDisconnected;
 
             _isConfigured = false;
             _motorStartFailure = false;
@@ -141,6 +148,15 @@ namespace UAV_Assistive_Operation.Services
         
 
         //Events to monitor for flight safety
+        private async void ControllerDisconnected()
+        {
+            if (_flightDataService.IsFlying)
+            {
+                _landingState = LandingState.RequiredLanding;
+                await LandAsync(false);
+            }
+        }
+
         private async void NotEnoughForceDetected(bool notEnoughForce)
         {
             if (notEnoughForce)
