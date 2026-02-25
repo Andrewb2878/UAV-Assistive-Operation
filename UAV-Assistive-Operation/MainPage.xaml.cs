@@ -5,6 +5,7 @@ using UAV_Assistive_Operation.Models;
 using UAV_Assistive_Operation.Services;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -115,6 +116,17 @@ namespace UAV_Assistive_Operation
             }
         }
 
+        private void RemapItemsControl_PreviewKeyDown(object sender, KeyRoutedEventArgs args)
+        {
+            if (args.Key == Windows.System.VirtualKey.GamepadLeftTrigger ||
+                args.Key == Windows.System.VirtualKey.GamepadRightTrigger ||
+                args.Key == Windows.System.VirtualKey.GamepadLeftShoulder ||
+                args.Key == Windows.System.VirtualKey.GamepadRightShoulder)
+            {
+                args.Handled = true;
+            }
+        }
+
 
         //UI popup methods        
         private void EvaluatePopupState()
@@ -189,7 +201,7 @@ namespace UAV_Assistive_Operation
             if (currentRow == null)
                 return;
 
-            RemapItemsControl.ScrollIntoView(currentRow);
+            RemapItemsControl.ScrollIntoView(currentRow);           
         }
 
         private async void StartCompletionSequenceAsync()

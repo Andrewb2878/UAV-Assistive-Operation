@@ -125,7 +125,6 @@ namespace UAV_Assistive_Operation.Services
         {
             if (error == FCMotorStartFailureError.NONE || error == FCMotorStartFailureError.UNKNOWN)
             {
-                EventLogService.Instance.Log(Enums.LogEventType.Debug, "here");
                 _alertService.AlertState("MotorStart", false, string.Empty, 2);
                 return;
             }

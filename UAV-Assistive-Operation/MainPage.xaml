@@ -82,7 +82,9 @@
                     ItemsSource="{x:Bind ViewModel.ControllerConfiguration.RemapRows, Mode=OneWay}"
                     SelectionMode="None"
                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                    ScrollViewer.VerticalScrollMode="Disabled">
+                    ScrollViewer.VerticalScrollMode="Disabled"
+                    XYFocusKeyboardNavigation="Disabled"
+                    PreviewKeyDown="RemapItemsControl_PreviewKeyDown">
 
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
@@ -164,7 +166,7 @@
                     Spacing="8"
                     Margin="0,12,0,0"
                     Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}}">
-                    
+
                     <TextBlock
                         x:Name="RemapProgressText"
                         Text="Setting inputs..."
@@ -184,8 +186,6 @@
                     HorizontalAlignment="Center"
                     Visibility="{Binding ControllerConfiguration.IsFullyRemapped, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}"/>
             </Grid>
-            
-
         </ContentDialog>
 
         <!--Initial UAV Connection Popup-->
