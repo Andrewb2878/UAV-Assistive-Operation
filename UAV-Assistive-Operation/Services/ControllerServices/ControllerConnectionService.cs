@@ -5,7 +5,7 @@ using Windows.UI.Xaml;
 
 namespace UAV_Assistive_Operation.Services
 {
-    public class ControllerService
+    public class ControllerConnectionService
     {
         public bool IsControllerConnected { get; private set; }
 

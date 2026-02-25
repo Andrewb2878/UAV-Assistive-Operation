@@ -17,7 +17,7 @@ namespace UAV_Assistive_Operation.Services
         private DJITelemetryService _telemetryService;
         private DJIFlightDataService _flightDataService;
 
-        private ControllerService _controllerService;
+        private ControllerConnectionService _controllerService;
 
         private bool _isConfigured;
         private int _configAttempts;
@@ -34,7 +34,7 @@ namespace UAV_Assistive_Operation.Services
 
 
         public void AircraftConnected(DJIConnectionService connectionService, DJITelemetryService telemetryService,
-            DJIFlightDataService flightDataService, ControllerService controllerService)
+            DJIFlightDataService flightDataService, ControllerConnectionService controllerService)
         {
             _connectionService = connectionService;
             _telemetryService = telemetryService;

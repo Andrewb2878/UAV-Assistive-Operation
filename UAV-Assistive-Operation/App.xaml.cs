@@ -21,7 +21,7 @@ namespace UAV_Assistive_Operation
         public static DJIFlightDataService DJIFlightDataService { get; private set; }
         public static DJIFlightControllerService DJIFlightControllerService { get; private set; }
         public static DJISimulatorService DJISimulatorService { get; private set; }
-        public static ControllerService ControllerService { get; private set; }
+        public static ControllerConnectionService ControllerService { get; private set; }
         public static AlertService AlertService { get; internal set; }
         public static EvaluationService EvaluationService { get; private set; }
 
@@ -33,7 +33,7 @@ namespace UAV_Assistive_Operation
             this.Suspending += OnSuspending;
 
             DJIConnectionService = new DJIConnectionService(Secrets.DjiKey);
-            ControllerService = new ControllerService();
+            ControllerService = new ControllerConnectionService();
 
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Maximized;
             

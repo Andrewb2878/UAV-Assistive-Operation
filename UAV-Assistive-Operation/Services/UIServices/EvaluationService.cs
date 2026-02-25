@@ -10,7 +10,7 @@ namespace UAV_Assistive_Operation.Services
         private readonly DJIConnectionService _connectionService;
         private readonly DJITelemetryService _telemetryService;
         private readonly DJIFlightDataService _flightDataService;
-        private readonly ControllerService _controllerService;
+        private readonly ControllerConnectionService _controllerService;
         private readonly AlertService _alertService;
 
 
@@ -18,7 +18,7 @@ namespace UAV_Assistive_Operation.Services
             DJIConnectionService connectionService,
             DJITelemetryService telemetryService,
             DJIFlightDataService flightDataService,
-            ControllerService controllerService,
+            ControllerConnectionService controllerService,
             AlertService alertService)
         {
             _connectionService = connectionService;
