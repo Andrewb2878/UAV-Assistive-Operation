@@ -5,6 +5,13 @@ using Windows.Gaming.Input;
 
 namespace UAV_Assistive_Operation.Services
 {
+    /// <summary>
+    /// Evaluation and safety service
+    /// 
+    /// Evaluating current flight state, safety conditions, hardware disconnections
+    /// and aircraft warnings. Using this data to update AlertService, log events and
+    /// calculate active flight status
+    /// </summary>
     public class EvaluationService
     {
         private readonly DJIConnectionService _connectionService;
@@ -14,6 +21,10 @@ namespace UAV_Assistive_Operation.Services
         private readonly AlertService _alertService;
 
 
+        /// <summary>
+        /// Subscribes to all required services and performs an initial evaluation
+        /// of aircraft and controller state
+        /// </summary>
         public EvaluationService(
             DJIConnectionService connectionService,
             DJITelemetryService telemetryService,
@@ -27,11 +38,14 @@ namespace UAV_Assistive_Operation.Services
             _controllerService = controllerService;
             _alertService = alertService;
 
+            //Aircraft connection monitoring
             _connectionService.AircraftConnected += AircraftConnected;
             _connectionService.AircraftDisconnected += AircraftDisconnected;
 
+            //Telemetry monitoring
             _telemetryService.GPS.PropertyChanged += GPSChanged;       
             
+            //Flight condition monitoring
             _flightDataService.FlyingChanged += FlyingChanged;
             _flightDataService.SeriousBatteryChanged += SeriousLowBatteryChanged;
             _flightDataService.LowBatteryChanged += LowBatteryChanged;
@@ -39,13 +53,39 @@ namespace UAV_Assistive_Operation.Services
             _flightDataService.WindWarningChanged += WindWarningChanged;
             _flightDataService.SimulatorStartedChanged += SimulatorChanged;
 
+            //Controller monitoring
             _controllerService.GamepadConnected += ControllerConnected;
             _controllerService.GamepadDisconnected += ControllerDisconnected;
 
+            //Initial evaluation 
             EvaluateFlightStatus();
             EvaluateControllerDisconnection();
         }
 
+
+        /// <summary>
+        /// Evaluates aircraft flight state
+        /// </summary>
+        private void EvaluateFlightStatus()
+        {
+            if (!_connectionService.IsAircraftConnected)
+            {
+                _alertService.ClearAlerts();
+                _alertService.FlightStatus("Aircraft Disconnected"); return;
+            }
+            if (_flightDataService.IsFlying)
+            {
+                _alertService.FlightStatus("In-Flight"); return;
+            }
+            if (_telemetryService.GPS.SufficientForFlight)
+            {
+                _alertService.FlightStatus("Ready to Takeoff");
+            }
+            else
+            {
+                _alertService.FlightStatus("Low GPS: Cannot Takeoff");
+            }
+        }
 
         //Getting values for flight status
         private void AircraftConnected() 
@@ -63,6 +103,9 @@ namespace UAV_Assistive_Operation.Services
             EvaluateFlightStatus();
         }
 
+        /// <summary>
+        /// Triggered by GPS changes
+        /// </summary>
         private void GPSChanged(object sender, PropertyChangedEventArgs args) 
         {
             if (args.PropertyName != nameof(GPSStrengthTelemetryModel.SufficientForFlight))
@@ -72,8 +115,9 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Setting values for alerts
-        //Battery alerts
+        /// <summary>
+        /// Triggered by serious battery level changes
+        /// </summary>
         private void SeriousLowBatteryChanged(bool seriousBattery)
         {
             _alertService.AlertState("SeriousBattery", seriousBattery, "Critically Low Battery", 1);
@@ -88,6 +132,9 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
+        /// <summary>
+        /// Triggered by low battery level changes
+        /// </summary>
         private void LowBatteryChanged(bool lowBattery)
         {
             _alertService.AlertState("LowBattery", lowBattery, "Low Battery Warning", 4);
@@ -104,7 +151,13 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Controller alerts
+        /// <summary>
+        /// Evaluates controller connection state
+        /// </summary>
+        private void EvaluateControllerDisconnection()
+        {
+            _alertService.AlertState("ControllerConnection", !_controllerService.IsControllerConnected, "Controller Disconnected", 2);
+        }
         private void ControllerConnected(Gamepad gamepad)
         {
             EvaluateControllerDisconnection();
@@ -115,12 +168,10 @@ namespace UAV_Assistive_Operation.Services
             EvaluateControllerDisconnection();
         }
 
-        private void EvaluateControllerDisconnection()
-        {
-            _alertService.AlertState("ControllerConnection", !_controllerService.IsControllerConnected, "Controller Disconnected", 2);
-        }
-
-        //Motor alerts
+        
+        /// <summary>
+        /// Translates DJI motor start errors codes into safety alerts and logs them to UI
+        /// </summary>
         private void MotorStartFailureChanged(FCMotorStartFailureError error)
         {
             if (error == FCMotorStartFailureError.NONE || error == FCMotorStartFailureError.UNKNOWN)
@@ -305,7 +356,9 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
-        //Wind alerts
+        /// <summary>
+        /// Tiggered by wind warning changes, higher levels having more priority
+        /// </summary>
         private void WindWarningChanged(FCWindWarning level)
         {
             switch (level)
@@ -323,33 +376,14 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
-        //Simulator alerts
+        
+        /// <summary>
+        /// Triggered by simulator mode changes
+        /// </summary>
         private void SimulatorChanged(bool simulatorStarted)
         {
             _alertService.AlertState("Simulator", simulatorStarted, "Simulator Mode", 2);
             EvaluateFlightStatus();
-        }
-
-
-        private void EvaluateFlightStatus()
-        {
-            if (!_connectionService.IsAircraftConnected)
-            {
-                _alertService.ClearAlerts();
-                _alertService.FlightStatus("Aircraft Disconnected"); return;
-            }
-            if (_flightDataService.IsFlying)
-            {
-                _alertService.FlightStatus("In-Flight"); return;
-            }
-            if (_telemetryService.GPS.SufficientForFlight)
-            {
-                _alertService.FlightStatus("Ready to Takeoff");
-            }
-            else
-            {
-                _alertService.FlightStatus("Low GPS: Cannot Takeoff");
-            }
         }
     }
 }

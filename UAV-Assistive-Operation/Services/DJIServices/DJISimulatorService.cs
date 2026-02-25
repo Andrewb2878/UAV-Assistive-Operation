@@ -60,6 +60,7 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
+        //Starts the simulator using the initialized settings
         public async Task StartSimulatorAsync()
         {
             if (_flightControllerHandler == null)
@@ -77,6 +78,7 @@ namespace UAV_Assistive_Operation.Services
             SimulatorStateChanged?.Invoke(true);
         }
 
+        //Stops the simulator
         public async Task StopSimulatorAsync()
         {
             if (_flightControllerHandler == null)

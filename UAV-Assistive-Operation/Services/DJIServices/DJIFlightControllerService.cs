@@ -7,6 +7,12 @@ using UAV_Assistive_Operation.Models;
 
 namespace UAV_Assistive_Operation.Services
 {
+    /// <summary>
+    /// Sends data to the aircraft from the application
+    /// 
+    /// It configures aircraft parameters on connection, executes flight commands, sends virtual stick inputs, 
+    /// enforces application safety systems and triggers emergency landings when required
+    /// </summary>
     public class DJIFlightControllerService
     {
         private FlightControllerHandler _flightController;
@@ -22,6 +28,7 @@ namespace UAV_Assistive_Operation.Services
         private bool _isConfigured;
         private int _configAttempts;
 
+        //Joystick state tracking to reduce sending duplicate commands
         private float _lastThrottle;
         private float _lastYaw;
         private float _lastPitch;
@@ -33,6 +40,10 @@ namespace UAV_Assistive_Operation.Services
         private bool _loggedNotFlying;
 
 
+        /// <summary>
+        /// Called when aircraft is connected to subscribe to required services and begins
+        /// aircraft configuration
+        /// </summary>
         public void AircraftConnected(DJIConnectionService connectionService, DJITelemetryService telemetryService,
             DJIFlightDataService flightDataService, ControllerConnectionService controllerService)
         {
@@ -41,6 +52,7 @@ namespace UAV_Assistive_Operation.Services
             _flightDataService = flightDataService;
             _controllerService = controllerService;
 
+            //subscribing to flight safety events
             _flightDataService.LandingConfirmationChanged += LandingConfirmationChangedAsync;
             _flightDataService.FlyingChanged += FlyingChanged;
             _flightDataService.NotEnoughForceChanged += NotEnoughForceDetected;
@@ -49,6 +61,7 @@ namespace UAV_Assistive_Operation.Services
 
             _controllerService.GamepadDisconnected += ControllerDisconnected;
 
+            //DJI SDK handlers
             _flightController = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0);
             _flightAssistant = DJISDKManager.Instance.ComponentManager.GetFlightAssistantHandler(0, 0);
             _virtualController = DJISDKManager.Instance.VirtualRemoteController;
@@ -60,6 +73,10 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
+        /// <summary>
+        /// Called when aircraft disconnects to unsubscribe from events and handlers and
+        ///resets internal states
+        /// </summary>
         public void AircraftDisconnected()
         {
             if (_flightDataService != null)
@@ -88,6 +105,10 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
+        /// <summary>
+        /// Attempts aircraft configuration up to 3 times, setting failsafe events, battery
+        /// thresholds and positioning settings
+        /// </summary>
         private async Task InitializeAsync()
         {
             while (_configAttempts < 3)
@@ -116,7 +137,9 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Configuring aircraft on connection
+        /// <summary>
+        /// Configures the aircraft
+        /// </summary>
         private async Task<bool> ConfigureAircraftAsync()
         {
             var controller = _flightController;
@@ -198,7 +221,9 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Aircraft command methods
+        /// <summary>
+        /// Validates safety constraints before sending the command
+        /// </summary>
         private async Task ExecuteFlightCommandAsync(Func<Task<SDKError>> command, string commandName, bool logResult)
         {
             if (!ValidateCommandExecution())
@@ -218,11 +243,17 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
+        /// <summary>
+        /// Triggers aircraft takeoff
+        /// </summary>
         public async Task TakeoffAsync(bool logResult=true)
         {
             await ExecuteFlightCommandAsync(() => _flightController.StartTakeoffAsync(), "takeoff", logResult);
         }
 
+        /// <summary>
+        /// Triggers aircraft landing sequence, can be triggered by user of safety systems
+        /// </summary>
         public async Task LandAsync(bool logResult=true)
         {
             if (_landingState != LandingState.RequiredLanding)
@@ -230,6 +261,22 @@ namespace UAV_Assistive_Operation.Services
             await ExecuteFlightCommandAsync(() => _flightController.StartAutoLandingAsync(), "landing", logResult);
         }
 
+        /// <summary>
+        /// Triggers aircraft final landing stage, only when landing is triggered by LandAsync
+        /// </summary>
+        /// <param name="landingConfirmation"></param>
+        private async void LandingConfirmationChangedAsync(bool landingConfirmation)
+        {
+            if (_landingState != LandingState.None && landingConfirmation)
+            {
+                _landingState = LandingState.None;
+                await ExecuteFlightCommandAsync(() => _flightController.ConfirmLandingAsync(), "landing", false);
+            }
+        }
+
+        /// <summary>
+        /// Stops all aircraft movements including takeoff and landing based on safety requirements
+        /// </summary>
         public async Task StopAsync(bool logResult=true)
         {
             if (!ValidateCommandExecution(logResult))
@@ -245,6 +292,9 @@ namespace UAV_Assistive_Operation.Services
             _landingState = LandingState.None;           
         }
 
+        /// <summary>
+        /// Sends real-time joystick commands to the aircraft
+        /// </summary>
         public async void VirtualStickCommandAsync(float throttle, float yaw, float pitch, float roll)
         {
             if (_landingState == LandingState.RequiredLanding)
@@ -272,6 +322,7 @@ namespace UAV_Assistive_Operation.Services
             if (!ValidateCommandExecution())
                 return;
 
+            //Clamping input ensuring values are within the range accepted by UpdateJoystickValue
             throttle = Math.Clamp(throttle, -1f, 1f);
             yaw = Math.Clamp(yaw, -1f, 1f);
             pitch = Math.Clamp(pitch, -1f, 1f);
@@ -299,18 +350,13 @@ namespace UAV_Assistive_Operation.Services
                 Math.Abs(roll - _lastRoll) > StickChangeThreshold;
         }
 
-        //Landing management
-        private async void LandingConfirmationChangedAsync(bool landingConfirmation)
-        {
-            if (_landingState != LandingState.None && landingConfirmation)
-            {
-                _landingState = LandingState.None;
-                await ExecuteFlightCommandAsync(() => _flightController.ConfirmLandingAsync(), "landing", false);
-            }
-        }
 
-
-        //Aircraft command validation method
+        /// <summary>
+        /// Ensures that flight commands are safe to execute
+        /// 
+        /// Blocks commands during motor start failures, low battery (not flying), low GPS
+        /// and handler misconfiguration
+        /// </summary>
         private bool ValidateCommandExecution(bool logResult=true)
         {
             if (_motorStartFailure)

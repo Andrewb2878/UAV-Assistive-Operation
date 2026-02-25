@@ -5,6 +5,13 @@ using UAV_Assistive_Operation.Models;
 
 namespace UAV_Assistive_Operation.Services
 {
+    /// <summary>
+    /// Processes mapped controller inputs and assigns correct inputs depending on the
+    /// current application mode
+    /// 
+    /// Converts controller inputs into application controls, handles flight commands, 
+    /// process virtual joystick inputs and changes behaviour based on the InputMode
+    /// </summary>
     public class ControllerProcessingService
     {
         //Services
@@ -14,16 +21,20 @@ namespace UAV_Assistive_Operation.Services
         private readonly MenuViewModel _menuViewModel;
         private readonly SimulatorWarningViewModel _simulatorWarningViewModel;
 
-        //States
+        //Current application input mode
         private InputMode _mode = InputMode.Flight;
+        //Stores previous button states for edge detection
         private readonly Dictionary<ApplicationControls, bool> _previousState = 
             new Dictionary<ApplicationControls, bool>();
 
-        //Variables
+        //Threshold values
         private const double PressThreshold = 0.8;
         private const double DeadZoneThreshold = 0.07;
 
 
+        /// <summary>
+        /// Subscribes to all required services and view models
+        /// </summary>
         public ControllerProcessingService(ControllerMappingService mappingService, 
             DJIFlightControllerService flightControllerService, FlightCommandViewModel flightCommand, MenuViewModel menuViewModel,
             SimulatorWarningViewModel simulatorWarningViewModel)
@@ -35,16 +46,25 @@ namespace UAV_Assistive_Operation.Services
             _simulatorWarningViewModel = simulatorWarningViewModel;
         }
 
+        /// <summary>
+        /// Subscribes to controller update events
+        /// </summary>
         public void Start()
         {
             App.ControllerService.ControllerUpdated += GamepadUpdated;
         }
 
+        /// <summary>
+        /// Unsubscribes to controller update events
+        /// </summary>
         public void Stop()
         {
             App.ControllerService.ControllerUpdated -= GamepadUpdated;
         }
 
+        /// <summary>
+        /// Changes the active input mode
+        /// </summary>
         public void SetMode(InputMode mode)
         {
             if (_mode == mode)
@@ -62,7 +82,9 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Selects which controls to enable based on InputMode
+        /// <summary>
+        /// Processes input based on the current InputMode
+        /// </summary>
         public void Process(bool[] buttons, double[] axes)
         {
             var current = _mappingService.ProcessInput(buttons, axes);
@@ -79,7 +101,9 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Processes control input with edge detection
+        /// <summary>
+        /// Executes an action using edge detection
+        /// </summary>
         private void HandleCommand(ApplicationControls control, Dictionary<ApplicationControls, double> current,
             Action action, Action<bool> setActive = null)
         {
@@ -96,7 +120,9 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Flight control processing
+        /// <summary>
+        /// Resets flight command state when leaving flight mode
+        /// </summary>
         private void ResetFlightCommandUI()
         {
             _flightCommand.TakeoffActive = false;
@@ -109,6 +135,9 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
+        /// <summary>
+        /// Handles controller inputs while in flight mode
+        /// </summary>
         private void HandleFlight(Dictionary<ApplicationControls, double> current)
         {
             HandleCommand(ApplicationControls.Takeoff, current, () => { _ = _flightControllerService.TakeoffAsync(); },
@@ -124,6 +153,9 @@ namespace UAV_Assistive_Operation.Services
             ProcessVirtualJoystick(current);
         }
 
+        /// <summary>
+        /// Sends virtual stick commands to the aircraft
+        /// </summary>
         private void ProcessVirtualJoystick(Dictionary<ApplicationControls, double> current)
         {
             float throttle = CombineAxis(current, ApplicationControls.ThrottleUp, ApplicationControls.ThrottleDown);
@@ -134,6 +166,9 @@ namespace UAV_Assistive_Operation.Services
             _flightControllerService.VirtualStickCommandAsync(throttle, yaw, pitch, roll);
         }
 
+        /// <summary>
+        /// Combines two opposing axis inputs into a single output value
+        /// </summary>
         private float CombineAxis(Dictionary<ApplicationControls, double> current, ApplicationControls positive,
                                     ApplicationControls negative)
         {
@@ -162,6 +197,9 @@ namespace UAV_Assistive_Operation.Services
             HandleCommand(ApplicationControls.Menu, current, () => _menuViewModel.MenuActive = !_menuViewModel.MenuActive);
         }
 
+        /// <summary>
+        /// Handles navigation controls while in the menu
+        /// </summary>
         private void HandleMenuNavigation(Dictionary<ApplicationControls, double> current)
         {
             HandleCommand(ApplicationControls.ThrottleUp, current, () => _menuViewModel.MoveUp());

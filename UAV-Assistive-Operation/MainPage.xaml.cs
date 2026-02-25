@@ -12,7 +12,7 @@ using Windows.UI.Xaml.Input;
 namespace UAV_Assistive_Operation
 {
     /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// Main application page
     /// </summary>
     public sealed partial class MainPage : Page
     {
@@ -40,7 +40,9 @@ namespace UAV_Assistive_Operation
         private bool IsSimWarningOpen => ViewModel.SimulatorWarning.MenuActive;
         
 
-
+        /// <summary>
+        /// Initializes services, view models, popup registrations and event subscriptions
+        /// </summary>
         public MainPage()
         {
             InitializeComponent();
@@ -70,6 +72,9 @@ namespace UAV_Assistive_Operation
         }
 
         
+        /// <summary>
+        /// Subscribes to application events
+        /// </summary>
         private void RegisterEvents()
         {
             Loaded += MainPage_Loaded;
@@ -128,7 +133,10 @@ namespace UAV_Assistive_Operation
         }
 
 
-        //UI popup methods        
+        /// <summary>
+        /// Displays popups depending on controller connection and configuration, aircraft
+        /// connection, menu state and simulator warnings
+        /// </summary>      
         private void EvaluatePopupState()
         {
             //Setting input mode
@@ -167,7 +175,11 @@ namespace UAV_Assistive_Operation
             }
         }
 
-        //Controller configuration popup
+        /// <summary>
+        /// Starts controller remapping
+        /// 
+        /// Subscribes to input detection event and starts the remapInputService
+        /// </summary>
         private void ShowRemapping()
         {
             if (!_startedConfiguration)
@@ -178,6 +190,9 @@ namespace UAV_Assistive_Operation
             _remapInputService.Start();
         }
 
+        /// <summary>
+        /// Handles controller input during remapping and triggers configuration completion
+        /// </summary>
         private void InputDetected(InputBindingModel binding)
         {
             if (_completingConfiguration)
@@ -204,6 +219,12 @@ namespace UAV_Assistive_Operation
             RemapItemsControl.ScrollIntoView(currentRow);           
         }
 
+        /// <summary>
+        /// Completes controller configuration
+        /// 
+        /// Unsubscribes from input detection, starts live controller processing and
+        /// logs completion state
+        /// </summary>
         private async void StartCompletionSequenceAsync()
         {
             _completingConfiguration = true;
@@ -230,7 +251,10 @@ namespace UAV_Assistive_Operation
         }
 
 
-        //Menu popup
+        /// <summary>
+        /// Handles menu command selections, preventing unsafe
+        /// actions if aircraft is flying
+        /// </summary>
         private void MenuCommandRequested(MenuCommand command, int index)
         {
             if (App.DJIFlightDataService.IsFlying)
@@ -256,6 +280,9 @@ namespace UAV_Assistive_Operation
             }
         }
 
+        /// <summary>
+        /// Stops controller processing and restarts the controller configuration sequence
+        /// </summary>
         private async Task HandleReconfigAsync()
         {
             _processingService.Stop();
@@ -273,6 +300,9 @@ namespace UAV_Assistive_Operation
             });
         }
 
+        /// <summary>
+        /// Toggles DJI simulator mode, showing a warning prior to start up
+        /// </summary>
         private async void HandleToggleSimulator()
         {
             if (!ViewModel.Menu.IsToggleButtonEnabled)
@@ -288,12 +318,9 @@ namespace UAV_Assistive_Operation
             EvaluatePopupState();
         }
 
-        private void HandleExit()
-        {
-            Application.Current.Exit();
-        }
-
-
+        /// <summary>
+        /// Confirms simulator start after warning 
+        /// </summary>
         private void SimulatorCommandRequested()
         {
             ViewModel.SimulatorWarning.MenuActive = false;
@@ -302,8 +329,16 @@ namespace UAV_Assistive_Operation
             EvaluatePopupState();
         }
 
+        private void HandleExit()
+        {
+            Application.Current.Exit();
+        }
 
-        //Map methods
+
+        /// <summary>
+        /// Starts the MapService and determines if the map fallback UI should be displayed,
+        /// logs if unavailable 
+        /// </summary>
         private async Task InitializeMapAsync()
         {
             var result = await _mapService.InitializeMapAsync();
@@ -333,8 +368,10 @@ namespace UAV_Assistive_Operation
         }
 
 
-        //Aircraft methods
-       private void AircraftConnected()
+        /// <summary>
+        /// Triggered when the aircraft successfully connects
+        /// </summary>
+        private void AircraftConnected()
         {
             _completedFirstAircraftConnection = true;
             EvaluatePopupState();
