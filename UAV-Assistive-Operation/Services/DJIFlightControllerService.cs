@@ -28,6 +28,7 @@ namespace UAV_Assistive_Operation.Services
 
         private bool _motorStartFailure = false;
         private LandingState _landingState;
+        private bool _loggedNotFlying;
 
 
         public void AircraftConnected(DJIConnectionService connectionService, DJITelemetryService telemetryService,
@@ -67,6 +68,7 @@ namespace UAV_Assistive_Operation.Services
 
             _isConfigured = false;
             _motorStartFailure = false;
+            _loggedNotFlying = false;
             _flightController = null;
             _flightAssistant = null;
             _virtualController = null;
@@ -231,11 +233,26 @@ namespace UAV_Assistive_Operation.Services
         {
             if (_landingState == LandingState.RequiredLanding)
                 return;
+
+            bool changed = HasStickChanged(throttle, yaw, pitch, roll);
+            if (!changed)
+                return;
+
             if (_flightDataService == null || !_flightDataService.IsFlying)
             {
-                EventLogService.Instance.Log(LogEventType.Warning, "Aircraft not flying: cannot perform action");
-                    return;
+                if (!_loggedNotFlying)
+                {
+                    EventLogService.Instance.Log(LogEventType.Warning, "Aircraft not flying: cannot perform action");
+                    _loggedNotFlying = true;
+                }
+                return;
             }
+            else
+            {
+                _loggedNotFlying = false;
+            }
+
+
             if (!ValidateCommandExecution())
                 return;
 
@@ -244,9 +261,6 @@ namespace UAV_Assistive_Operation.Services
             pitch = Math.Clamp(pitch, -1f, 1f);
             roll = Math.Clamp(roll, -1f, 1f);
 
-            bool changed = HasStickChanged(throttle, yaw, pitch, roll);
-            if (!changed)
-                return;
             if (_landingState == LandingState.UserLanding)
             {
                 _landingState = LandingState.None;

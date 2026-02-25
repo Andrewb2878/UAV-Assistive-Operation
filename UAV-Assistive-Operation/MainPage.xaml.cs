@@ -189,13 +189,7 @@ namespace UAV_Assistive_Operation
             if (currentRow == null)
                 return;
 
-            if (RemapItemsControl.ContainerFromItem(currentRow) is FrameworkElement container)
-            {
-                var transform = container.TransformToVisual(RemapItemsControl);
-                var position = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
-
-                RemapScrollViewer.ChangeView(null, position.Y - 50, null);
-            }
+            RemapItemsControl.ScrollIntoView(currentRow);
         }
 
         private async void StartCompletionSequenceAsync()
@@ -261,8 +255,10 @@ namespace UAV_Assistive_Operation
             EvaluatePopupState();
             EventLogService.Instance.Log(LogEventType.System, "Controller reconfiguration started...");
 
-            await Task.Delay(70);
-            UpdateScrollPosition();
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+            {
+                UpdateScrollPosition();
+            });
         }
 
         private async void HandleToggleSimulator()
