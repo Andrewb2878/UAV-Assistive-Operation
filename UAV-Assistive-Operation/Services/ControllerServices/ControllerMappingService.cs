@@ -7,20 +7,31 @@ using UAV_Assistive_Operation.Models;
 
 namespace UAV_Assistive_Operation.Services
 {
+    /// <summary>
+    /// Converts controller input bindings into application controls
+    /// 
+    /// Storing active control bindings, validating remapping rules, preventing duplicate input assignment
+    /// and automatically generates opposite axis bindings
+    /// </summary>
     public class ControllerMappingService
     {
+        // Stores the mappings of application controls and their corresponding controller input
         private readonly Dictionary<ApplicationControls, InputBindingModel> _binding = 
             new Dictionary<ApplicationControls, InputBindingModel>();
 
 
-        //Bool value if all controls are assigned
+        //Bool value used to tell if remapping is complete
         public bool IsFullyRemapped => _binding.Count == Enum.GetValues(typeof(ApplicationControls)).Length;
 
         //Events
         public event Action RemappingStateChanged;
 
 
-        //Uses _binding to generate real-time control values
+        /// <summary>
+        /// Processes controller inputs and converts into application values
+        /// </summary>
+        /// <param name="buttons">Array of controller button states</param>
+        /// <param name="axes">Array of controller axis values</param>
         public Dictionary<ApplicationControls, double> ProcessInput(bool[] buttons, double[] axes)
         {
             var output = new Dictionary<ApplicationControls, double>();
@@ -57,7 +68,10 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        //Configurating controller inputs
+        /// <summary>
+        /// Attempts to assign controller inputs based on validation rules, preventing duplicate inputs,
+        /// applying control specific remapping rules, optional automatic axis generation
+        /// </summary>
         public bool TryAssignBinding(ApplicationControls control, InputBindingModel binding, out string error, out ApplicationControls? autoAssignedControl)
         {
             error = null;
@@ -77,6 +91,7 @@ namespace UAV_Assistive_Operation.Services
                 }
             }
 
+            //Validate remapping rules for current control
             var rule = ControlRemappingRules.Rules[control];
                         
             if (binding.Type == InputTypes.Button && !rule.AllowButton)
@@ -102,6 +117,9 @@ namespace UAV_Assistive_Operation.Services
             return true;
         }
 
+        /// <summary>
+        /// Creates a UI version of the binding
+        /// </summary>
         public string DescribeBinding(InputBindingModel binding)
         {
             switch (binding.Type)
@@ -123,7 +141,9 @@ namespace UAV_Assistive_Operation.Services
             };
         }
 
-        //Automatically assigns opposite controls for allowed axis inputs
+        /// <summary>
+        /// Automatically assigns opposite controls for bipolar axis inputs
+        /// </summary>
         private ApplicationControls? AssignOpposite(ApplicationControls control, InputBindingModel binding)
         {
             ApplicationControls? opposite;
@@ -155,7 +175,9 @@ namespace UAV_Assistive_Operation.Services
             return opposite;
         }
 
-
+        /// <summary>
+        /// Logs all current bindings for debug use
+        /// </summary>
         public void DisplayBindings()
         {
             EventLogService.Instance.Log(LogEventType.Info, "Control bindings:");
@@ -181,6 +203,9 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
+        /// <summary>
+        /// Clears existing controller bindings
+        /// </summary>
         public void ClearBindings()
         {
             _binding.Clear();
