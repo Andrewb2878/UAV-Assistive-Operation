@@ -265,7 +265,6 @@ namespace UAV_Assistive_Operation.Services
         /// <summary>
         /// Triggers aircraft final landing stage, only when landing is triggered by LandAsync
         /// </summary>
-        /// <param name="landingConfirmation"></param>
         private async void LandingConfirmationChangedAsync(bool landingConfirmation)
         {
             if (_landingState != LandingState.None && landingConfirmation)
@@ -319,7 +318,6 @@ namespace UAV_Assistive_Operation.Services
                 _loggedNotFlying = false;
             }
 
-
             if (!ValidateCommandExecution())
                 return;
 
@@ -334,6 +332,10 @@ namespace UAV_Assistive_Operation.Services
                 _landingState = LandingState.None;
                 await _flightController.StopAutoLandingAsync();
             }
+
+            //Stops the aircraft from ascending if it is at the configured height limit
+            if (_flightDataService.IsNearHeightLimit && throttle > 0)
+                throttle = 0;
 
             _virtualController.UpdateJoystickValue(throttle, yaw, pitch, roll);
 

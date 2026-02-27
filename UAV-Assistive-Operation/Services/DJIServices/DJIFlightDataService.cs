@@ -16,6 +16,7 @@ namespace UAV_Assistive_Operation.Services
         public bool IsSeriousLowBattery { get; private set; }
         public bool IsLowBattery { get; private set; }
         public bool IsSimulatorStarted { get; private set; }
+        public bool IsNearHeightLimit { get; private set; }
 
         public LocationFlightDataModel Location { get; } = new LocationFlightDataModel();
 
@@ -27,6 +28,7 @@ namespace UAV_Assistive_Operation.Services
         //EvaluationServices relevant events for services to subscribe to
         public event Action<bool> FlyingChanged;
         public event Action<bool> LandingConfirmationChanged;
+        public event Action<bool> HeightLimitReachedChanged;
         public event Action<bool> SeriousBatteryChanged;
         public event Action<bool> LowBatteryChanged;
         public event Action<FCMotorStartFailureError> MotorStartFailureChanged;
@@ -58,6 +60,7 @@ namespace UAV_Assistive_Operation.Services
 
                 _flightControllerHandler.IsFlyingChanged += AircraftFlyingChanged;
                 _flightControllerHandler.IsLandingConfirmationNeededChanged += LandingConfirmationNeededChanged;
+                _flightControllerHandler.IsNearHeightLimitChanged += NearHeightLimitChanged;
                 _flightControllerHandler.IsSeriousLowBatteryWarningChanged += SeriousLowBattery;
                 _flightControllerHandler.IsLowBatteryWarningChanged += LowBattery;
                 _flightControllerHandler.MotorStartFailureErrorChanged += MotorStartFailure;
@@ -145,6 +148,15 @@ namespace UAV_Assistive_Operation.Services
 
             var confirmation = value.Value.value;
             LandingConfirmationChanged?.Invoke(confirmation);
+        }
+
+        private void NearHeightLimitChanged(object sender, BoolMsg? value)
+        {
+            if (IsAircraftConnected || value == null)
+                return;
+
+            IsNearHeightLimit = value.Value.value;
+            
         }
 
         private void SeriousLowBattery(object sender, BoolMsg? value)

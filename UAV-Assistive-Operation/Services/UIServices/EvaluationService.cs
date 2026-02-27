@@ -47,6 +47,7 @@ namespace UAV_Assistive_Operation.Services
             
             //Flight condition monitoring
             _flightDataService.FlyingChanged += FlyingChanged;
+            _flightDataService.HeightLimitReachedChanged += HeightLimitReachedChanged;
             _flightDataService.SeriousBatteryChanged += SeriousLowBatteryChanged;
             _flightDataService.LowBatteryChanged += LowBatteryChanged;
             _flightDataService.MotorStartFailureChanged += MotorStartFailureChanged;
@@ -104,6 +105,18 @@ namespace UAV_Assistive_Operation.Services
         }
 
         /// <summary>
+        /// Triggered by reaching the configured height limit
+        /// </summary>
+        private void HeightLimitReachedChanged(bool heightLimitReached)
+        {
+            if (heightLimitReached)
+            {
+                _alertService.AlertState("HeightLimit", heightLimitReached, "Height Limit Reached", 4);
+                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Height limit reached");
+            }
+        }
+
+        /// <summary>
         /// Triggered by GPS changes
         /// </summary>
         private void GPSChanged(object sender, PropertyChangedEventArgs args) 
@@ -113,7 +126,6 @@ namespace UAV_Assistive_Operation.Services
 
             EvaluateFlightStatus();
         }
-
 
         /// <summary>
         /// Triggered by serious battery level changes
