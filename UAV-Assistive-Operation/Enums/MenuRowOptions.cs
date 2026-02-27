@@ -7,6 +7,8 @@ namespace UAV_Assistive_Operation.Enums
         [Display(Name = "Reconfigure controller")]
         ReconfigController,
         [Display(Name = "Simulator mode")]
-        simulatorMode
+        SimulatorMode,
+        [Display(Name = "Telemetry units")]
+        TelemetryUnits
     }
 }

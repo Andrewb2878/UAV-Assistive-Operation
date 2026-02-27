@@ -154,6 +154,7 @@ namespace UAV_Assistive_Operation.Services
                 if (dataService.CanConfigureAircraft())
                 {
                     await controller.SetFailsafeActionAsync(new FCFailsafeActionMsg { value = FCFailsafeAction.LANDING });
+                    await controller.SetHeightLimitAsync(new IntMsg { value = 120 });
                     await controller.SetLowBatteryWarningThresholdAsync(new IntMsg { value = 20 });
                     await controller.SetSeriousLowBatteryWarningThresholdAsync(new IntMsg { value = 10 });
 

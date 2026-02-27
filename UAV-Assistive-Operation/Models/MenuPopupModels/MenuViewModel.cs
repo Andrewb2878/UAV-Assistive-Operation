@@ -13,7 +13,8 @@ namespace UAV_Assistive_Operation.Models
         //States
         private bool _menuActive = false;
         private int _currentIndex = 0;
-        public MenuRowViewModel SimulatorRow => GetRow(MenuRowOptions.simulatorMode);
+        public MenuRowViewModel SimulatorRow => GetRow(MenuRowOptions.SimulatorMode);
+        public MenuRowViewModel UnitRow => GetRow(MenuRowOptions.TelemetryUnits);
 
         //Properties
         public ObservableCollection<MenuRowViewModel> MenuRows { get; }
@@ -42,7 +43,7 @@ namespace UAV_Assistive_Operation.Models
             }
         }
 
-        public MenuRowViewModel GetRow(MenuRowOptions option)
+        private MenuRowViewModel GetRow(MenuRowOptions option)
         {
             return MenuRows.FirstOrDefault(row => row.MenuOption == option);
         }
@@ -151,6 +152,8 @@ namespace UAV_Assistive_Operation.Models
                     CommandRequested?.Invoke(MenuCommand.ReconfigureController, SelectedIndex); break;
                 case 1:
                     CommandRequested?.Invoke(MenuCommand.ToggleSimulator, SelectedIndex); break;
+                case 2:
+                    CommandRequested?.Invoke(MenuCommand.TelemetryUnits, SelectedIndex); break;
             }
         }
 

@@ -10,7 +10,6 @@ namespace UAV_Assistive_Operation.Services
     {
         private BatteryHandler _batteryHandler;
         private FlightControllerHandler _flightControllerHandler;
-        private const double _MsMph = 2.23694;
 
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
 
@@ -155,13 +154,12 @@ namespace UAV_Assistive_Operation.Services
                 var velocityDown = velocity.value.Value.z;
 
                 double horizontalMs = Math.Sqrt(velocityNorth * velocityNorth + velocityEast * velocityEast);
-                double horizontalMph = horizontalMs * _MsMph;
-                double verticalMph = (-velocityDown) * _MsMph;
+                double verticalMs = -velocityDown;
 
                 await App.RunOnUIThread(() =>
                 {
-                    Speed.Horizontal = horizontalMph;
-                    Speed.Vertical = verticalMph;
+                    Speed.Horizontal = horizontalMs;
+                    Speed.Vertical = verticalMs;
                 });
             }
         }
@@ -222,13 +220,12 @@ namespace UAV_Assistive_Operation.Services
             var velocityDown = value.Value.z;
 
             double horizontalMs = Math.Sqrt(velocityNorth * velocityNorth + velocityEast * velocityEast);
-            double horizontalMph = horizontalMs * _MsMph;
-            double verticalMph = (-velocityDown) * _MsMph;
+            double verticalMs = -velocityDown;
 
             await App.RunOnUIThread(() =>
             {
-                Speed.Horizontal = horizontalMph;
-                Speed.Vertical = verticalMph;
+                Speed.Horizontal = horizontalMs;
+                Speed.Vertical = verticalMs;
             });
         }
     }

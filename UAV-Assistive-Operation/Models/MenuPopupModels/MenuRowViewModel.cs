@@ -10,7 +10,7 @@ namespace UAV_Assistive_Operation.Models
     {
         public MenuRowOptions MenuOption { get; }
         public string DisplayName => MenuOption.GetDisplayName();
-        public bool IsSimulatorRow => MenuOption == MenuRowOptions.simulatorMode;
+        public bool IsSimulatorRow => MenuOption == MenuRowOptions.SimulatorMode;
 
 
         public bool IsToggleButton => MenuRules.Rules.TryGetValue(MenuOption, out var rule) && rule.IsToggleButton;

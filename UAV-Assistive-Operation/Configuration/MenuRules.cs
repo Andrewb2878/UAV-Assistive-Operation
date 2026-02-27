@@ -15,11 +15,18 @@ namespace UAV_Assistive_Operation.Configuration
                 ButtonText = "Configure"
             },
 
-            [MenuRowOptions.simulatorMode] = new MenuRulesModel
+            [MenuRowOptions.SimulatorMode] = new MenuRulesModel
             {
                 IsToggleButton = true,
                 EnabledText = "Disable",
                 DisabledText = "Enable"
+            },
+
+            [MenuRowOptions.TelemetryUnits] = new MenuRulesModel
+            {
+                IsToggleButton = true,
+                EnabledText = "Imperial (ft, mph)",
+                DisabledText = "Metric (m, m/s)",
             }
         };
     }

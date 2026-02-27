@@ -89,7 +89,7 @@ namespace UAV_Assistive_Operation
 
             App.DJISimulatorService.SimulatorStateChanged += isRunning =>
             {
-                var simulatorRow = ViewModel.Menu.GetRow(MenuRowOptions.simulatorMode);
+                var simulatorRow = ViewModel.Menu.SimulatorRow;
                 if (simulatorRow != null)
                     simulatorRow.IsToggled = isRunning;
             };
@@ -258,29 +258,49 @@ namespace UAV_Assistive_Operation
         /// </summary>
         private void MenuCommandRequested(MenuCommand command, int index)
         {
-            if (App.DJIFlightDataService.IsFlying)
-            {
-                ViewModel.Menu.SetRowError(index, "Cannot perform action during flight.");
-                return;
-            }
-
             switch (command)
             {
                 case MenuCommand.ReconfigureController:
+                    if (IsActionBlocked(index)) return;
                     _ = HandleReconfigAsync(); break;
+
                 case MenuCommand.ToggleSimulator:
-                    var simulatorRow = ViewModel.Menu.GetRow(MenuRowOptions.simulatorMode);
+                    if (IsActionBlocked(index)) return;
+                    var simulatorRow = ViewModel.Menu.SimulatorRow;
 
                     if (!App.DJIConnectionService.IsAircraftConnected && !simulatorRow.IsToggled)
                     {
                         ViewModel.Menu.SetRowError(index, "Aircraft must be connected to start simulator mode");
                         return;
                     }
-                    HandleToggleSimulator(simulatorRow);
+                    HandleToggleSimulator(simulatorRow); break;
+
+                case MenuCommand.TelemetryUnits:
+                    var unitRow = ViewModel.Menu.UnitRow;
+
+                    unitRow.IsToggled = !unitRow.IsToggled;
+                    App.DJITelemetryService.Altitude.UseMetric = !unitRow.IsToggled;
+                    App.DJITelemetryService.Speed.UseMetric = !unitRow.IsToggled;
+                    EventLogService.Instance.Log(LogEventType.Info, "Telemetry units changed");
                     break;
+
                 case MenuCommand.ExitApplication:
+                    if (IsActionBlocked(index)) return;
                     HandleExit(); break;
             }
+        }
+
+        /// <summary>
+        /// Checks if the drone is flying and sets a row error if an unsafe action is attempted.
+        /// </summary>
+        private bool IsActionBlocked(int index)
+        {
+            if (App.DJIFlightDataService.IsFlying)
+            {
+                ViewModel.Menu.SetRowError(index, "Cannot perform action during flight.");
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

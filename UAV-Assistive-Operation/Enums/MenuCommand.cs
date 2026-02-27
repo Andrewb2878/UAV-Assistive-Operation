@@ -4,6 +4,7 @@
     {
         ReconfigureController,
         ToggleSimulator,
+        TelemetryUnits,
         ExitApplication
     }
 }

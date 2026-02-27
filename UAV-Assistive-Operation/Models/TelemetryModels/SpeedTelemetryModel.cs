@@ -7,40 +7,62 @@ namespace UAV_Assistive_Operation.Models
     {
         private double? _horizontal;
         private double? _vertical;
+        private const double _MsMph = 2.23694;
+        private bool _useMetric = true;
 
 
-        public double? Horizontal
+        public bool UseMetric
+        {
+            get => _useMetric;
+            set 
+            {
+                _useMetric = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DisplayHorizontal));
+                OnPropertyChanged(nameof(DisplayVertical)); 
+            }
+        }
+
+
+        public double? Horizontal 
         {
             get => _horizontal;
-            set
-            {
-                if (_horizontal != value)
-                {
-                    _horizontal = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(DisplayHorizontal));
-                }
-            }
+            set 
+            { 
+                if (Set(ref _horizontal, value)) 
+                    OnPropertyChanged(nameof(DisplayHorizontal)); 
+            } 
         }
 
         public double? Vertical
         {
             get => _vertical;
-            set
-            {
-                if (_vertical != value)
-                {
-                    _vertical = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(DisplayVertical));
-                }
-            }
+            set 
+            { 
+                if (Set(ref _vertical, value))
+                    OnPropertyChanged(nameof(DisplayVertical)); 
+            } 
         }
 
-        public string DisplayHorizontal => Horizontal.HasValue ? $"H.S: {Horizontal.Value:F1} mph" : "H.S: -- mph";
-        public string DisplayVertical => Vertical.HasValue ? $"V.S: {Vertical.Value:+0.0;-0.0} mph" : "V.S: -- mph";
+
+        public string DisplayHorizontal => !Horizontal.HasValue ? "H.S: --" :
+        UseMetric ? $"H.S: {Horizontal.Value:F1} m/s" : $"H.S: {Horizontal.Value * _MsMph:F1} mph";
+        public string DisplayVertical => !Vertical.HasValue ? "V.S: --" :
+        UseMetric ? $"V.S: {Vertical.Value:+0.0;-0.0} m/s" : $"V.S: {Vertical.Value * _MsMph:+0.0;-0.0} mph";
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+
+        private bool Set<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (!Equals(field, value))
+            {
+                field = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                return true;
+            }
+            return false;
+        }
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
