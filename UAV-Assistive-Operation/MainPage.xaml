@@ -263,7 +263,7 @@
                                         <ToggleButton 
                                             Width="150"
                                             IsHitTestVisible="False"                                            
-                                            Content="{Binding DataContext.Menu.ToggleButtonText, ElementName=MenuPopup}"                                            
+                                            Content="{Binding CurrentButtonText}"                                            
                                             BorderBrush="SlateGray"
                                             Background="{Binding IsPressed, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Button}"
                                             CornerRadius="8"
@@ -272,7 +272,7 @@
                                         <Button 
                                             Width="150"
                                             IsHitTestVisible="False"
-                                            Content="{Binding ButtonText}"                                            
+                                            Content="{Binding CurrentButtonText}"                                            
                                             BorderBrush="SlateGray"
                                             Background="{Binding IsPressed, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Button}"
                                             CornerRadius="8"
@@ -378,7 +378,7 @@
 
             <StackPanel
                 HorizontalAlignment="Right"
-                Visibility="{Binding Menu.IsToggleButtonEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                Visibility="{Binding Menu.SimulatorRow.IsToggled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                 
                 <Border 
                     Margin="10"
@@ -412,8 +412,8 @@
         <Grid x:Name="AlertGrid"  Grid.Row="0" Grid.ColumnSpan="2" Height="56">
             <Grid.Background>
                 <LinearGradientBrush x:Name="AlertBackground" StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="{Binding Menu.IsToggleButtonEnabled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.0"/>
-                    <GradientStop Color="{Binding Menu.IsToggleButtonEnabled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.48"/>
+                    <GradientStop Color="{Binding Menu.SimulatorRow.IsToggled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.0"/>
+                    <GradientStop Color="{Binding Menu.SimulatorRow.IsToggled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.48"/>
                     <GradientStop Color="#002F4F4F" Offset="0.65"/>
                     <GradientStop Color="#002F4F4F" Offset="1.0"/>
                 </LinearGradientBrush>
@@ -686,8 +686,8 @@
                 <Grid Grid.Row="0">
                     <Grid.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                            <GradientStop Color="{Binding Menu.IsToggleButtonEnabled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.0"/>
-                            <GradientStop Color="{Binding Menu.IsToggleButtonEnabled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.48"/>
+                            <GradientStop Color="{Binding Menu.SimulatorRow.IsToggled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.0"/>
+                            <GradientStop Color="{Binding Menu.SimulatorRow.IsToggled, Mode=OneWay, Converter={StaticResource BoolToColorConverter}}" Offset="0.48"/>
                             <GradientStop Color="AliceBlue" Offset="0.65"/>
                             <GradientStop Color="AliceBlue" Offset="1.0"/>
                         </LinearGradientBrush>

@@ -12,8 +12,8 @@ namespace UAV_Assistive_Operation.Models
     {
         //States
         private bool _menuActive = false;
-        private bool _toggleButtonEnabled;
         private int _currentIndex = 0;
+        public MenuRowViewModel SimulatorRow => GetRow(MenuRowOptions.simulatorMode);
 
         //Properties
         public ObservableCollection<MenuRowViewModel> MenuRows { get; }
@@ -32,18 +32,6 @@ namespace UAV_Assistive_Operation.Models
             }
         }
 
-        public string ToggleButtonText => IsToggleButtonEnabled ? "Disable" : "Enable";
-
-        public bool IsToggleButtonEnabled
-        {
-            get => _toggleButtonEnabled;
-            set
-            {
-                if (Set(ref _toggleButtonEnabled, value))
-                    OnPropertyChanged(nameof(ToggleButtonText));
-            }
-        }
-
         public int SelectedIndex
         {
             get => _currentIndex;
@@ -52,6 +40,11 @@ namespace UAV_Assistive_Operation.Models
                 if (Set(ref _currentIndex, value))
                     HighlightCurrent();
             }
+        }
+
+        public MenuRowViewModel GetRow(MenuRowOptions option)
+        {
+            return MenuRows.FirstOrDefault(row => row.MenuOption == option);
         }
 
 

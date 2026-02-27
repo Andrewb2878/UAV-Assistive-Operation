@@ -14,8 +14,37 @@ namespace UAV_Assistive_Operation.Models
 
 
         public bool IsToggleButton => MenuRules.Rules.TryGetValue(MenuOption, out var rule) && rule.IsToggleButton;
-        public string ButtonText => MenuRules.Rules.TryGetValue(MenuOption, out var rule) ? rule.ButtonText : "Select";
+        public string CurrentButtonText
+        {
+            get
+            {
+                if (!MenuRules.Rules.TryGetValue(MenuOption, out var rule))
+                    return "Select";
 
+                if (!rule.IsToggleButton)
+                    return rule.ButtonText ?? "Select";
+
+                return IsToggled
+                    ? rule.EnabledText ?? "On"
+                    : rule.DisabledText ?? "Off";
+            }
+        }
+
+
+        private bool _isToggled;
+        public bool IsToggled
+        {
+            get => _isToggled;
+            set
+            {
+                if (_isToggled != value)
+                {
+                    _isToggled = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(CurrentButtonText));
+                }
+            }
+        }
 
         private string _error;
         public string Error

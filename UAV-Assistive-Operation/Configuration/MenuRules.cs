@@ -17,7 +17,9 @@ namespace UAV_Assistive_Operation.Configuration
 
             [MenuRowOptions.simulatorMode] = new MenuRulesModel
             {
-                IsToggleButton = true
+                IsToggleButton = true,
+                EnabledText = "Disable",
+                DisabledText = "Enable"
             }
         };
     }

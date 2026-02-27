@@ -28,7 +28,6 @@ namespace UAV_Assistive_Operation
         private bool _startedConfiguration = false;
         private bool _completingConfiguration = false;
         private bool _completedFirstAircraftConnection = false;
-        private bool _showSimulatorWarning = false;
         public MainViewModel ViewModel { get; }
 
 
@@ -90,7 +89,9 @@ namespace UAV_Assistive_Operation
 
             App.DJISimulatorService.SimulatorStateChanged += isRunning =>
             {
-                ViewModel.Menu.IsToggleButtonEnabled = isRunning;
+                var simulatorRow = ViewModel.Menu.GetRow(MenuRowOptions.simulatorMode);
+                if (simulatorRow != null)
+                    simulatorRow.IsToggled = isRunning;
             };
 
             App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
@@ -268,12 +269,14 @@ namespace UAV_Assistive_Operation
                 case MenuCommand.ReconfigureController:
                     _ = HandleReconfigAsync(); break;
                 case MenuCommand.ToggleSimulator:
-                    if (!App.DJIConnectionService.IsAircraftConnected && !ViewModel.Menu.IsToggleButtonEnabled)
+                    var simulatorRow = ViewModel.Menu.GetRow(MenuRowOptions.simulatorMode);
+
+                    if (!App.DJIConnectionService.IsAircraftConnected && !simulatorRow.IsToggled)
                     {
                         ViewModel.Menu.SetRowError(index, "Aircraft must be connected to start simulator mode");
                         return;
                     }
-                    HandleToggleSimulator();
+                    HandleToggleSimulator(simulatorRow);
                     break;
                 case MenuCommand.ExitApplication:
                     HandleExit(); break;
@@ -303,9 +306,9 @@ namespace UAV_Assistive_Operation
         /// <summary>
         /// Toggles DJI simulator mode, showing a warning prior to start up
         /// </summary>
-        private async void HandleToggleSimulator()
+        private async void HandleToggleSimulator(MenuRowViewModel simulatorRow)
         {
-            if (!ViewModel.Menu.IsToggleButtonEnabled)
+            if (!simulatorRow.IsToggled)
             {
                 ViewModel.SimulatorWarning.MenuActive = true;
                 await App.DJISimulatorService.InitializeSimulatorAsync();
