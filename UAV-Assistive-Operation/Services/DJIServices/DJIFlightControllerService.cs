@@ -8,10 +8,10 @@ using UAV_Assistive_Operation.Models;
 namespace UAV_Assistive_Operation.Services
 {
     /// <summary>
-    /// Sends data to the aircraft from the application
+    /// <para> Sends data to the aircraft from the application </para>
     /// 
-    /// It configures aircraft parameters on connection, executes flight commands, sends virtual stick inputs, 
-    /// enforces application safety systems and triggers emergency landings when required
+    /// <para> It configures aircraft parameters on connection, executes flight commands, sends virtual stick inputs, 
+    /// enforces application safety systems and triggers emergency landings when required </para>
     /// </summary>
     public class DJIFlightControllerService
     {
@@ -35,9 +35,16 @@ namespace UAV_Assistive_Operation.Services
         private float _lastRoll;
         private const float StickChangeThreshold = 0.01f;
 
+        //state tracking to manage the stop command
+        private bool _stopModeActive;
+        private const float BrakingGain = 0.2f;
+        private const double StopThreshold = 0.2;
+        private const int BrakingUpdateFrequency = 80;
+
+
         private bool _motorStartFailure = false;
         private LandingState _landingState;
-        private bool _loggedNotFlying;
+        private bool _notFlyingWarningLogged;
 
 
         /// <summary>
@@ -54,12 +61,14 @@ namespace UAV_Assistive_Operation.Services
 
             //subscribing to flight safety events
             _flightDataService.LandingConfirmationChanged += LandingConfirmationChangedAsync;
-            _flightDataService.FlyingChanged += FlyingChanged;
             _flightDataService.NotEnoughForceChanged += NotEnoughForceDetected;
             _flightDataService.MotorStartFailureChanged += MotorStartFailureDetected;
             _flightDataService.SeriousBatteryChanged += SeriousBatteryDetected;
-
             _controllerService.GamepadDisconnected += ControllerDisconnected;
+
+            //Subscribing to events used during operation
+            _flightDataService.FlyingChanged += FlyingChanged;
+            _telemetryService.VisionAltitudeThresholdChanged += VisionAltitudeThresholdChanged;
 
             //DJI SDK handlers
             _flightController = DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0);
@@ -87,12 +96,16 @@ namespace UAV_Assistive_Operation.Services
                 _flightDataService.MotorStartFailureChanged -= MotorStartFailureDetected;
                 _flightDataService.SeriousBatteryChanged -= SeriousBatteryDetected;
             }
+            if (_telemetryService != null)
+            {
+                _telemetryService.VisionAltitudeThresholdChanged -= VisionAltitudeThresholdChanged;
+            }
 
             _controllerService.GamepadDisconnected -= ControllerDisconnected;
 
             _isConfigured = false;
             _motorStartFailure = false;
-            _loggedNotFlying = false;
+            _notFlyingWarningLogged = false;
             _flightController = null;
             _flightAssistant = null;
             _virtualController = null;
@@ -134,6 +147,10 @@ namespace UAV_Assistive_Operation.Services
 
             EventLogService.Instance.Log(LogEventType.Error,
                 "Aircraft Configuration failed: reconnect the aircraft and try again");
+            if (!_isConfigured && _flightDataService.IsFlying)
+            {
+                _ = _flightController.StartAutoLandingAsync();
+            }
         }
 
 
@@ -157,6 +174,7 @@ namespace UAV_Assistive_Operation.Services
                     await controller.SetHeightLimitAsync(new IntMsg { value = 120 });
                     await controller.SetLowBatteryWarningThresholdAsync(new IntMsg { value = 20 });
                     await controller.SetSeriousLowBatteryWarningThresholdAsync(new IntMsg { value = 10 });
+                    await controller.SetMultipleFlightModeEnabledAsync(new BoolMsg { value = false });
 
                     await assistant.SetVisionAssistedPositioningEnabledAsync(new BoolMsg { value = true });
                     return true;
@@ -215,10 +233,27 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
+
+        //Events to monitor for flight operations
         private void FlyingChanged(bool flying)
         {
             if (!flying)
                 _landingState = LandingState.None;
+        }
+
+        private async void VisionAltitudeThresholdChanged(bool aboveThreshold)
+        {
+            if (_flightAssistant == null || !_flightDataService.IsFlying)
+                return;
+
+            try
+            {
+                await _flightAssistant.SetVisionAssistedPositioningEnabledAsync(new BoolMsg { value = !aboveThreshold });
+            }
+            catch (Exception error)
+            {
+                EventLogService.Instance.Log(LogEventType.Error, $"Vision assisted positioning change failed: {error.Message}");
+            }
         }
 
 
@@ -282,14 +317,46 @@ namespace UAV_Assistive_Operation.Services
             if (!ValidateCommandExecution(logResult))
                 return;
 
-            _virtualController.UpdateJoystickValue(0f, 0f, 0f, 0f);
+            _stopModeActive = true;
 
             await _flightController.StopTakeoffAsync();
-            if (_landingState == LandingState.RequiredLanding)
-                return;
-            
-            await _flightController.StopAutoLandingAsync();
-            _landingState = LandingState.None;           
+            if (_landingState != LandingState.RequiredLanding)
+            {
+                await _flightController.StopAutoLandingAsync();
+                _landingState = LandingState.None;
+            }
+
+            _ = Task.Run(() => RunBrakingLoop());        
+        }
+
+        // Calculates and applies an opposite force to counteract aircraft momentum
+        private async Task RunBrakingLoop()
+        {
+            while (_stopModeActive)
+            {
+                var velocityData = _telemetryService.Speed;
+
+                if (!velocityData.VelocityX.HasValue || !velocityData.VelocityY.HasValue || !velocityData.Horizontal.HasValue)
+                {
+                    await Task.Delay(BrakingUpdateFrequency);
+                    continue;
+                }
+
+                //Checking if the aircraft has stopped
+                if (velocityData.Horizontal.Value < StopThreshold)
+                {
+                    break;
+                }
+
+                //Calculating opposite force to be applied
+                float counterPitch = (float)(-velocityData.VelocityX.Value * BrakingGain);
+                float counterRoll = (float)(-velocityData.VelocityY.Value * BrakingGain);
+
+                _virtualController.UpdateJoystickValue(0f, 0f, counterPitch, counterRoll);
+                await Task.Delay(BrakingUpdateFrequency);
+            }
+            _virtualController.UpdateJoystickValue(0f, 0f, 0f, 0f);
+            _stopModeActive = false;
         }
 
         /// <summary>
@@ -297,25 +364,32 @@ namespace UAV_Assistive_Operation.Services
         /// </summary>
         public async void VirtualStickCommandAsync(float throttle, float yaw, float pitch, float roll)
         {
+            bool changed = HasStickChanged(throttle, yaw, pitch, roll);
+            if (changed && _stopModeActive)
+            {
+                _stopModeActive = false;
+            }
+            else if (!changed)
+            {
+                return;
+            }
+
             if (_landingState == LandingState.RequiredLanding)
                 return;
 
-            bool changed = HasStickChanged(throttle, yaw, pitch, roll);
-            if (!changed)
-                return;
 
             if (_flightDataService == null || !_flightDataService.IsFlying)
             {
-                if (!_loggedNotFlying)
+                if (!_notFlyingWarningLogged)
                 {
                     EventLogService.Instance.Log(LogEventType.Warning, "Aircraft not flying: cannot perform action");
-                    _loggedNotFlying = true;
+                    _notFlyingWarningLogged = true;
                 }
                 return;
             }
             else
             {
-                _loggedNotFlying = false;
+                _notFlyingWarningLogged = false;
             }
 
             if (!ValidateCommandExecution())
@@ -355,10 +429,10 @@ namespace UAV_Assistive_Operation.Services
 
 
         /// <summary>
-        /// Ensures that flight commands are safe to execute
+        /// <para> Ensures that flight commands are safe to execute </para>
         /// 
-        /// Blocks commands during motor start failures, low battery (not flying), low GPS
-        /// and handler misconfiguration
+        /// <para> Blocks commands during motor start failures, low battery (not flying), low GPS
+        /// and handler misconfiguration </para>
         /// </summary>
         private bool ValidateCommandExecution(bool logResult=true)
         {

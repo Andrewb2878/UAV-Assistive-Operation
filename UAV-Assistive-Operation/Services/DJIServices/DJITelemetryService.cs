@@ -12,6 +12,9 @@ namespace UAV_Assistive_Operation.Services
         private FlightControllerHandler _flightControllerHandler;
 
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
+        
+        private const double VisionAssistAltitudeThreshold = 4.0;
+        private bool _isAboveVisionThreshold;
 
 
         public BatteryTelemetryModel Battery { get; } = new BatteryTelemetryModel();
@@ -19,6 +22,10 @@ namespace UAV_Assistive_Operation.Services
         public GPSStrengthTelemetryModel GPS { get; } = new GPSStrengthTelemetryModel();
         public AltitudeTelemetryModel Altitude { get; } = new AltitudeTelemetryModel();
         public SpeedTelemetryModel Speed { get; } = new SpeedTelemetryModel();
+
+
+        //Events for Services to subscribe to
+        public event Action<bool> VisionAltitudeThresholdChanged;
 
 
         public void AircraftConnected()
@@ -33,8 +40,9 @@ namespace UAV_Assistive_Operation.Services
             FlightMode.FlightMode = null;
             GPS.SignalLevel = null;
             Altitude.Altitude = null;
-            Speed.Horizontal = null;
-            Speed.Vertical = null;
+            Speed.VelocityX = null;
+            Speed.VelocityY = null;
+            Speed.VelocityZ = null;
 
             UnsubscribeFromBattery();
             UnsubscribeFromFlightController();
@@ -149,17 +157,18 @@ namespace UAV_Assistive_Operation.Services
             var velocity = await _flightControllerHandler.GetVelocityAsync();
             if (velocity.value != null)
             {
-                var velocityNorth = velocity.value.Value.x;
-                var velocityEast = velocity.value.Value.y;
-                var velocityDown = velocity.value.Value.z;
+                var velocityX = velocity.value.Value.x;
+                var velocityY = velocity.value.Value.y;
+                var velocityZ = velocity.value.Value.z;
 
-                double horizontalMs = Math.Sqrt(velocityNorth * velocityNorth + velocityEast * velocityEast);
-                double verticalMs = -velocityDown;
+                //double horizontalMs = Math.Sqrt(velocityNorth * velocityNorth + velocityEast * velocityEast);
+                //double verticalMs = -velocityDown;
 
                 await App.RunOnUIThread(() =>
                 {
-                    Speed.Horizontal = horizontalMs;
-                    Speed.Vertical = verticalMs;
+                    Speed.VelocityX = velocityX;
+                    Speed.VelocityY = velocityY;
+                    Speed.VelocityZ = velocityZ;
                 });
             }
         }
@@ -204,10 +213,14 @@ namespace UAV_Assistive_Operation.Services
             if (!IsAircraftConnected || value == null)
                 return;
 
+            double altitude = value.Value.value;
+
             await App.RunOnUIThread(() =>
             {
-                Altitude.Altitude = value.Value.value;
+                Altitude.Altitude = altitude;
             });
+
+            CheckVisionAssistThreshold(altitude);
         }
 
         private async void VelocityChanged(object sender, Velocity3D? value)
@@ -215,18 +228,29 @@ namespace UAV_Assistive_Operation.Services
             if (!IsAircraftConnected || value == null)
                 return;
 
-            var velocityNorth = value.Value.x;
-            var velocityEast = value.Value.y;
-            var velocityDown = value.Value.z;
-
-            double horizontalMs = Math.Sqrt(velocityNorth * velocityNorth + velocityEast * velocityEast);
-            double verticalMs = -velocityDown;
+            var velocityX = value.Value.x;
+            var velocityY = value.Value.y;
+            var velocityZ = value.Value.z;
 
             await App.RunOnUIThread(() =>
             {
-                Speed.Horizontal = horizontalMs;
-                Speed.Vertical = verticalMs;
+                Speed.VelocityX = velocityX;
+                Speed.VelocityY = velocityY;
+                Speed.VelocityZ = velocityZ;
             });
+        }
+
+
+        //Triggering events based on state changes
+        private void CheckVisionAssistThreshold(double altitude)
+        {
+            bool aboveThreshold = altitude > VisionAssistAltitudeThreshold;
+
+            if (aboveThreshold != _isAboveVisionThreshold)
+            {
+                _isAboveVisionThreshold = aboveThreshold;
+                VisionAltitudeThresholdChanged?.Invoke(aboveThreshold);
+            }
         }
     }
 }

@@ -94,7 +94,7 @@ namespace UAV_Assistive_Operation
                     simulatorRow.IsToggled = isRunning;
             };
 
-            App.DJIFlightDataService.UavLocationUpdated += async (lat, lon) =>
+            App.DJIFlightDataService.UAVLocationUpdated += async (lat, lon) =>
             {
                 await _mapService.UpdateUavLocation(lat, lon);
             };
@@ -221,10 +221,10 @@ namespace UAV_Assistive_Operation
         }
 
         /// <summary>
-        /// Completes controller configuration
+        /// <para> Completes controller configuration </para>
         /// 
-        /// Unsubscribes from input detection, starts live controller processing and
-        /// logs completion state
+        /// <para> Unsubscribes from input detection, starts live controller processing and
+        /// logs completion state </para>
         /// </summary>
         private async void StartCompletionSequenceAsync()
         {

@@ -1,16 +1,17 @@
 ﻿using DJI.WindowsSDK;
 using System.ComponentModel;
+using UAV_Assistive_Operation.Enums;
 using UAV_Assistive_Operation.Models;
 using Windows.Gaming.Input;
 
 namespace UAV_Assistive_Operation.Services
 {
     /// <summary>
-    /// Evaluation and safety service
+    /// <para> Evaluation and safety service </para>
     /// 
-    /// Evaluating current flight state, safety conditions, hardware disconnections
+    /// <para> Evaluating current flight state, safety conditions, hardware disconnections
     /// and aircraft warnings. Using this data to update AlertService, log events and
-    /// calculate active flight status
+    /// calculate active flight status </para>
     /// </summary>
     public class EvaluationService
     {
@@ -38,20 +39,23 @@ namespace UAV_Assistive_Operation.Services
             _controllerService = controllerService;
             _alertService = alertService;
 
-            //Aircraft connection monitoring
+            //Aircraft monitoring
             _connectionService.AircraftConnected += AircraftConnected;
             _connectionService.AircraftDisconnected += AircraftDisconnected;
+            _flightDataService.FlyingChanged += FlyingChanged;
 
             //Telemetry monitoring
-            _telemetryService.GPS.PropertyChanged += GPSChanged;       
-            
-            //Flight condition monitoring
-            _flightDataService.FlyingChanged += FlyingChanged;
+            _telemetryService.GPS.PropertyChanged += GPSChanged;
             _flightDataService.HeightLimitReachedChanged += HeightLimitReachedChanged;
+            _flightDataService.WindWarningChanged += WindWarningChanged;
+            _flightDataService.VisionAssistedPositioningChanged += VisionAssistedPositioningChanged;
+
+            //Battery and safety monitoring
             _flightDataService.SeriousBatteryChanged += SeriousLowBatteryChanged;
             _flightDataService.LowBatteryChanged += LowBatteryChanged;
             _flightDataService.MotorStartFailureChanged += MotorStartFailureChanged;
-            _flightDataService.WindWarningChanged += WindWarningChanged;
+
+            //Mode monitoring
             _flightDataService.SimulatorStartedChanged += SimulatorChanged;
 
             //Controller monitoring
@@ -76,7 +80,7 @@ namespace UAV_Assistive_Operation.Services
             }
             if (_flightDataService.IsFlying)
             {
-                _alertService.FlightStatus("In-Flight"); return;
+                _alertService.FlightStatus(_flightDataService.IsVisionAssistedPositioningEnabled ? "In-Flight (Vision)" : "In-Flight"); return;
             }
             if (_telemetryService.GPS.SufficientForFlight)
             {
@@ -88,7 +92,51 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
-        //Getting values for flight status
+        /// <summary>
+        /// Evaluates battery alerts based on battery and flying state
+        /// </summary>
+        private void EvaluateBatteryStatus()
+        {
+            if (!_connectionService.IsAircraftConnected)
+                return;
+
+            if (_flightDataService.IsSeriousLowBattery)
+            {
+                _alertService.AlertState("SeriousBattery", _flightDataService.IsSeriousLowBattery,
+                    _flightDataService.IsFlying ? "Critically Low Battery: Auto Landing" : "Critically Low Battery", 1);
+                EventLogService.Instance.Log(LogEventType.Warning, "Critically low aircraft battery");
+            }
+            else if (_flightDataService.IsLowBattery)
+            {
+                if (_flightDataService.IsFlying)
+                {
+                    _alertService.AlertState("LowBattery", _flightDataService.IsLowBattery, "Low Battery Warning", 4);
+                    EventLogService.Instance.Log(LogEventType.Warning, "Low aircraft battery: aircraft will auto land shortly");
+                }
+                else
+                {
+                    _alertService.AlertState("LowBattery", _flightDataService.IsLowBattery, "Low Battery: Cannot Takeoff", 2);
+                    EventLogService.Instance.Log(LogEventType.Warning, "Low aircraft battery: cannot takeoff");
+                }
+            }
+            else
+            {
+                _alertService.AlertState("SeriousBattery", false, "", 1);
+                _alertService.AlertState("LowBattery", false, "", 4);
+            }
+        }
+
+        /// <summary>
+        /// Evaluates controller connection state
+        /// </summary>
+        private void EvaluateControllerDisconnection()
+        {
+            _alertService.AlertState("ControllerConnection", !_controllerService.IsControllerConnected, "Controller Disconnected", 2);
+        }
+
+
+
+        //Aircraft handlers
         private void AircraftConnected() 
         {
             EvaluateFlightStatus();
@@ -102,24 +150,13 @@ namespace UAV_Assistive_Operation.Services
         private void FlyingChanged(bool flying)
         {
             EvaluateFlightStatus();
+            EvaluateBatteryStatus();
         }
 
-        /// <summary>
-        /// Triggered by reaching the configured height limit
-        /// </summary>
-        private void HeightLimitReachedChanged(bool heightLimitReached)
-        {
-            if (heightLimitReached)
-            {
-                _alertService.AlertState("HeightLimit", heightLimitReached, "Height Limit Reached", 4);
-                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Height limit reached");
-            }
-        }
 
-        /// <summary>
-        /// Triggered by GPS changes
-        /// </summary>
-        private void GPSChanged(object sender, PropertyChangedEventArgs args) 
+
+        //Telemetry handlers
+        private void GPSChanged(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName != nameof(GPSStrengthTelemetryModel.SufficientForFlight))
                 return;
@@ -127,49 +164,54 @@ namespace UAV_Assistive_Operation.Services
             EvaluateFlightStatus();
         }
 
-        /// <summary>
-        /// Triggered by serious battery level changes
-        /// </summary>
+        private void HeightLimitReachedChanged(bool heightLimitReached)
+        {
+            if (heightLimitReached)
+            {
+                _alertService.AlertState("HeightLimit", heightLimitReached, "Height Limit Reached", 4);
+                EventLogService.Instance.Log(LogEventType.Warning, "Height limit reached");
+            }
+        }
+
+        private void WindWarningChanged(FCWindWarning level)
+        {
+            switch (level)
+            {
+                case FCWindWarning.LEVEL_0:
+                    _alertService.AlertState("Wind", false, string.Empty, 6); break;
+                case FCWindWarning.LEVEL_1:
+                    _alertService.AlertState("Wind", true, "High Wind: Fly with caution", 6);
+                    EventLogService.Instance.Log(LogEventType.Warning, "High Wind: Fly with caution"); break;
+                case FCWindWarning.LEVEL_2:
+                    _alertService.AlertState("Wind", true, "Strong Wind: Land when possible", 3);
+                    EventLogService.Instance.Log(LogEventType.Warning, "Strong Wind: Land when possible"); break;
+                case FCWindWarning.UNKNOWN:
+                    _alertService.AlertState("Wind", false, string.Empty, 6); break;
+            }
+        }
+
+        private void VisionAssistedPositioningChanged(bool visionAssistedPositioning)
+        {
+            EventLogService.Instance.Log(LogEventType.Info, $"Vision assisted positioning {(visionAssistedPositioning ? "enabled" : "disabled")}");
+            EvaluateFlightStatus();
+        }
+
+
+
+        //Battery handlers
         private void SeriousLowBatteryChanged(bool seriousBattery)
         {
-            _alertService.AlertState("SeriousBattery", seriousBattery, "Critically Low Battery", 1);
-            
-            if (seriousBattery && _flightDataService.IsFlying)
-            {
-                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Critically low aircraft battery: auto landing...");
-            }
-            else if (seriousBattery && !_flightDataService.IsFlying)
-            {
-                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Critically low aircraft battery");
-            }
+            EvaluateBatteryStatus();
         }
 
-        /// <summary>
-        /// Triggered by low battery level changes
-        /// </summary>
         private void LowBatteryChanged(bool lowBattery)
         {
-            _alertService.AlertState("LowBattery", lowBattery, "Low Battery Warning", 4);
-
-            if (lowBattery && _flightDataService.IsFlying)
-            {
-                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Low aircraft battery: aircraft will auto land shortly");
-            }
-            else if (lowBattery && !_flightDataService.IsFlying)
-            {
-                EventLogService.Instance.Log(Enums.LogEventType.Warning, "Low aircraft battery: cannot takeoff");
-            }
-                
+            EvaluateBatteryStatus();  
         }
 
 
-        /// <summary>
-        /// Evaluates controller connection state
-        /// </summary>
-        private void EvaluateControllerDisconnection()
-        {
-            _alertService.AlertState("ControllerConnection", !_controllerService.IsControllerConnected, "Controller Disconnected", 2);
-        }
+
+        //Controller handlers
         private void ControllerConnected(Gamepad gamepad)
         {
             EvaluateControllerDisconnection();
@@ -181,9 +223,7 @@ namespace UAV_Assistive_Operation.Services
         }
 
         
-        /// <summary>
-        /// Translates DJI motor start errors codes into safety alerts and logs them to UI
-        /// </summary>
+        //Aircraft error handling
         private void MotorStartFailureChanged(FCMotorStartFailureError error)
         {
             if (error == FCMotorStartFailureError.NONE || error == FCMotorStartFailureError.UNKNOWN)
@@ -364,34 +404,13 @@ namespace UAV_Assistive_Operation.Services
             if (!string.IsNullOrEmpty(errorMsg))
             {
                 _alertService.AlertState("MotorStart", true, errorMsg, 2);
-                EventLogService.Instance.Log(Enums.LogEventType.Error, errorMsg);
+                EventLogService.Instance.Log(LogEventType.Error, errorMsg);
             }
         }
 
-        /// <summary>
-        /// Tiggered by wind warning changes, higher levels having more priority
-        /// </summary>
-        private void WindWarningChanged(FCWindWarning level)
-        {
-            switch (level)
-            {
-                case FCWindWarning.LEVEL_0:
-                    _alertService.AlertState("Wind", false, string.Empty, 6); break;
-                case FCWindWarning.LEVEL_1:
-                    _alertService.AlertState("Wind", true, "High Wind: Fly with caution", 6);
-                    EventLogService.Instance.Log(Enums.LogEventType.Warning, "High Wind: Fly with caution"); break;
-                case FCWindWarning.LEVEL_2:
-                    _alertService.AlertState("Wind", true, "Strong Wind: Land when possible", 3);
-                    EventLogService.Instance.Log(Enums.LogEventType.Warning, "Strong Wind: Land when possible"); break;
-                case FCWindWarning.UNKNOWN:
-                    _alertService.AlertState("Wind", false, string.Empty, 6); break ;
-            }
-        }
 
         
-        /// <summary>
-        /// Triggered by simulator mode changes
-        /// </summary>
+        // Mode handlers
         private void SimulatorChanged(bool simulatorStarted)
         {
             _alertService.AlertState("Simulator", simulatorStarted, "Simulator Mode", 2);

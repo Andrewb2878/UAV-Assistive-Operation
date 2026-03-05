@@ -8,6 +8,7 @@ namespace UAV_Assistive_Operation.Services
     public class DJIFlightDataService
     {
         private FlightControllerHandler _flightControllerHandler;
+        private FlightAssistantHandler _flightAssistantHandler;
         private bool IsAircraftConnected => App.DJIConnectionService.IsAircraftConnected;
 
 
@@ -15,14 +16,15 @@ namespace UAV_Assistive_Operation.Services
         public bool IsFlying {  get; private set; }
         public bool IsSeriousLowBattery { get; private set; }
         public bool IsLowBattery { get; private set; }
-        public bool IsSimulatorStarted { get; private set; }
         public bool IsNearHeightLimit { get; private set; }
+        public bool IsSimulatorStarted { get; private set; }        
+        public bool IsVisionAssistedPositioningEnabled { get; private set; }
 
         public LocationFlightDataModel Location { get; } = new LocationFlightDataModel();
 
 
         //MapService relevant events for services to subscribe to
-        public event Action<double, double> UavLocationUpdated;
+        public event Action<double, double> UAVLocationUpdated;
         public event Action<double> UAVHeadingUpdated;
 
         //EvaluationServices relevant events for services to subscribe to
@@ -35,15 +37,18 @@ namespace UAV_Assistive_Operation.Services
         public event Action<bool> NotEnoughForceChanged;
         public event Action<FCWindWarning> WindWarningChanged;
         public event Action<bool> SimulatorStartedChanged;
+        public event Action<bool> VisionAssistedPositioningChanged;
 
         public void AircraftConnected()
         {
             SubscribeToFlightController();
+            SubscribeToFlightAssistant(); 
         }
 
         public void AircraftDisconnected()
         {
             UnsubscribeToFlightController();
+            UnsubscribeToFlightAssistant();
         }
 
 
@@ -71,6 +76,15 @@ namespace UAV_Assistive_Operation.Services
             }
         }
 
+        private void SubscribeToFlightAssistant()
+        {
+            _flightAssistantHandler = DJISDKManager.Instance.ComponentManager.GetFlightAssistantHandler(0, 0);
+            if (_flightAssistantHandler != null)
+            {
+                _flightAssistantHandler.VisionAssistedPositioningEnabledChanged += VisionAssistChanged;
+            }
+        }
+
 
         //Unsubscribing from events
         private void UnsubscribeToFlightController()
@@ -90,6 +104,14 @@ namespace UAV_Assistive_Operation.Services
 
                 _flightControllerHandler.IsSimulatorStartedChanged -= SimulatorStarted;
                 _flightControllerHandler = null;
+            }
+        }
+
+        private void UnsubscribeToFlightAssistant()
+        {
+            if (_flightAssistantHandler != null)
+            {
+                _flightAssistantHandler.VisionAssistedPositioningEnabledChanged -= VisionAssistChanged;
             }
         }
 
@@ -114,7 +136,7 @@ namespace UAV_Assistive_Operation.Services
             var lat = value.Value.latitude; 
             var lon = value.Value.longitude;
 
-            UavLocationUpdated?.Invoke(lat, lon);
+            UAVLocationUpdated?.Invoke(lat, lon);
 
             await App.RunOnUIThread(() =>
             {
@@ -152,7 +174,7 @@ namespace UAV_Assistive_Operation.Services
 
         private void NearHeightLimitChanged(object sender, BoolMsg? value)
         {
-            if (IsAircraftConnected || value == null)
+            if (!IsAircraftConnected || value == null)
                 return;
 
             IsNearHeightLimit = value.Value.value;
@@ -164,8 +186,8 @@ namespace UAV_Assistive_Operation.Services
             if (!IsAircraftConnected || value == null)
                 return;
 
-            var seriousBattery = value.Value.value;
-            SeriousBatteryChanged?.Invoke(seriousBattery);
+            IsSeriousLowBattery = value.Value.value;
+            SeriousBatteryChanged?.Invoke(IsSeriousLowBattery);
         }
 
         private void LowBattery(object sender, BoolMsg? value)
@@ -173,8 +195,8 @@ namespace UAV_Assistive_Operation.Services
             if (!IsAircraftConnected || value == null) 
                 return;
 
-            var lowBattery = value.Value.value;
-            LowBatteryChanged?.Invoke(lowBattery);
+            IsLowBattery = value.Value.value;
+            LowBatteryChanged?.Invoke(IsLowBattery);
         }
 
         private void MotorStartFailure(object sender, FCMotorStartFailureErrorMsg? value)
@@ -201,7 +223,7 @@ namespace UAV_Assistive_Operation.Services
                 return;
 
             var level = value.Value.value;
-            WindWarningChanged.Invoke(level);
+            WindWarningChanged?.Invoke(level);
         }
 
 
@@ -214,7 +236,17 @@ namespace UAV_Assistive_Operation.Services
             SimulatorStartedChanged?.Invoke(IsSimulatorStarted);
         }
 
-        //Method to check if aircraft can be configured
+        private void VisionAssistChanged(object sender, BoolMsg? value)
+        {
+            if (!IsAircraftConnected || value == null)
+                return;
+
+            IsVisionAssistedPositioningEnabled = value.Value.value;
+            VisionAssistedPositioningChanged?.Invoke(IsVisionAssistedPositioningEnabled);
+        }
+
+
+        //Method to check if the aircraft can be configured
         public bool CanConfigureAircraft()
         {
             return IsAircraftConnected && !IsFlying;

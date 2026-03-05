@@ -1,12 +1,16 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using UAV_Assistive_Operation.Services;
 
 namespace UAV_Assistive_Operation.Models
 {
     public class SpeedTelemetryModel : INotifyPropertyChanged
     {
-        private double? _horizontal;
-        private double? _vertical;
+        private double? _velocityX;
+        private double? _velocityY;
+        private double? _velocityZ;
+
         private const double _MsMph = 2.23694;
         private bool _useMetric = true;
 
@@ -14,35 +18,62 @@ namespace UAV_Assistive_Operation.Models
         public bool UseMetric
         {
             get => _useMetric;
-            set 
+            set
             {
                 _useMetric = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(DisplayHorizontal));
-                OnPropertyChanged(nameof(DisplayVertical)); 
+                OnPropertyChanged(nameof(DisplayVertical));
             }
         }
 
 
-        public double? Horizontal 
+        public double? VelocityX
         {
-            get => _horizontal;
-            set 
-            { 
-                if (Set(ref _horizontal, value)) 
-                    OnPropertyChanged(nameof(DisplayHorizontal)); 
-            } 
+            get => _velocityX;
+            set
+            {
+                if (Set(ref _velocityX, value))
+                {
+                    OnPropertyChanged(nameof(Horizontal));
+                    OnPropertyChanged(nameof(DisplayHorizontal));
+                }
+            }
         }
 
-        public double? Vertical
+        public double? VelocityY
         {
-            get => _vertical;
-            set 
-            { 
-                if (Set(ref _vertical, value))
-                    OnPropertyChanged(nameof(DisplayVertical)); 
-            } 
+            get => _velocityY;
+            set
+            {
+                if (Set(ref _velocityY, value))
+                {
+                    OnPropertyChanged(nameof(Horizontal));
+                    OnPropertyChanged(nameof(DisplayHorizontal));
+                }
+            }
         }
+
+        public double? VelocityZ
+        {
+            get => _velocityZ;
+            set 
+            {
+                if (Set(ref _velocityZ, value))
+                {
+                    OnPropertyChanged(nameof(Vertical));
+                    OnPropertyChanged(nameof(DisplayVertical));
+                }
+            }
+        }
+
+
+        public double? Horizontal => VelocityX.HasValue && VelocityY.HasValue ?
+            (double?)Math.Sqrt((VelocityX.Value * VelocityX.Value) + (VelocityY.Value * VelocityY.Value)) : null;
+
+        public double? Vertical => VelocityZ.HasValue ?
+            (double?)-VelocityZ.Value : null;
+
 
 
         public string DisplayHorizontal => !Horizontal.HasValue ? "H.S: --" :
