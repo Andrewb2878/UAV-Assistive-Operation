@@ -180,7 +180,7 @@ namespace UAV_Assistive_Operation.Services
                 case FCWindWarning.LEVEL_0:
                     _alertService.AlertState("Wind", false, string.Empty, 6); break;
                 case FCWindWarning.LEVEL_1:
-                    _alertService.AlertState("Wind", true, "High Wind: Fly with caution", 6);
+                    _alertService.AlertState("Wind", true, "High Wind: Fly with caution", 5);
                     EventLogService.Instance.Log(LogEventType.Warning, "High Wind: Fly with caution"); break;
                 case FCWindWarning.LEVEL_2:
                     _alertService.AlertState("Wind", true, "Strong Wind: Land when possible", 3);
