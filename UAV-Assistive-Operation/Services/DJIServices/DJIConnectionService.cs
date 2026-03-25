@@ -47,7 +47,7 @@ namespace UAV_Assistive_Operation.Services
             {
                 
                 Debug.WriteLine("SDK Registered successfully.");
-                SubscribeToProductChanges();
+                SubscribeToConnectionChanges();
             }
             else
             {
@@ -56,7 +56,7 @@ namespace UAV_Assistive_Operation.Services
         }
 
         //Aircraft connection monitoring
-        private void SubscribeToProductChanges()
+        private void SubscribeToConnectionChanges()
         {
             DJISDKManager.Instance.ComponentManager.GetProductHandler(0).ProductTypeChanged += ProductTypeChanged;
             DJISDKManager.Instance.ComponentManager.GetFlightControllerHandler(0, 0).ConnectionChanged += FlightControllerConnectionChanged;
