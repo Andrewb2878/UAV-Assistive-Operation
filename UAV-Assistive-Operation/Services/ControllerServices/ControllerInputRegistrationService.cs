@@ -8,7 +8,7 @@ namespace UAV_Assistive_Operation.Services
     /// Listens for controller input while in remapping mode and detects which
     /// button or axis the user triggers for control assignment
     /// </summary>
-    public class ControllerRemapInputService
+    public class ControllerInputRegistrationService
     {
         private readonly ControllerMappingService _mappingService;
 
@@ -49,7 +49,7 @@ namespace UAV_Assistive_Operation.Services
         }
 
 
-        public ControllerRemapInputService(ControllerMappingService mappingService)
+        public ControllerInputRegistrationService(ControllerMappingService mappingService)
         {
             _mappingService = mappingService;
         }

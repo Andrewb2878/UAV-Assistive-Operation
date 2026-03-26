@@ -161,7 +161,7 @@
     <Compile Include="Models\TelemetryModels\SpeedTelemetryModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ControllerServices\ControllerProcessingService.cs" />
-    <Compile Include="Services\ControllerServices\ControllerRemapInputService.cs" />
+    <Compile Include="Services\ControllerServices\ControllerInputRegistrationService.cs" />
     <Compile Include="Services\ControllerServices\ControllerMappingService.cs" />
     <Compile Include="Services\ControllerServices\ControllerConnectionService.cs" />
     <Compile Include="Services\DJIServices\DJIConnectionService.cs" />

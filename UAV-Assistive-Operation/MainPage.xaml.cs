@@ -20,7 +20,7 @@ namespace UAV_Assistive_Operation
         private readonly UIPopupService _popupService;
         private readonly MapService _mapService;
         private readonly ControllerMappingService _mappingService;
-        private readonly ControllerRemapInputService _remapInputService;
+        private readonly ControllerInputRegistrationService _remapInputService;
         private readonly ControllerProcessingService _processingService;
 
         //State
@@ -49,7 +49,7 @@ namespace UAV_Assistive_Operation
 
             //Service initialization
             _mappingService = new ControllerMappingService();
-            _remapInputService = new ControllerRemapInputService(_mappingService);
+            _remapInputService = new ControllerInputRegistrationService(_mappingService);
 
             //View model initialization
             ViewModel = new MainViewModel(_mappingService);
