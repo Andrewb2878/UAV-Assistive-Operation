@@ -413,7 +413,7 @@ namespace UAV_Assistive_Operation.Services
         // Mode handlers
         private void SimulatorChanged(bool simulatorStarted)
         {
-            _alertService.AlertState("Simulator", simulatorStarted, "Simulator Mode", 2);
+            _alertService.AlertState("Simulator", simulatorStarted, "Simulator Mode", 3);
             EvaluateFlightStatus();
         }
     }
