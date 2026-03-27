@@ -20,7 +20,7 @@ namespace UAV_Assistive_Operation
         private readonly UIPopupService _popupService;
         private readonly MapService _mapService;
         private readonly ControllerMappingService _mappingService;
-        private readonly ControllerInputRegistrationService _remapInputService;
+        private readonly ControllerInputRegistrationService _inputRegistrationService;
         private readonly ControllerInputProcessingService _processingService;
 
         //State
@@ -49,7 +49,7 @@ namespace UAV_Assistive_Operation
 
             //Service initialization
             _mappingService = new ControllerMappingService();
-            _remapInputService = new ControllerInputRegistrationService(_mappingService);
+            _inputRegistrationService = new ControllerInputRegistrationService(_mappingService);
 
             //View model initialization
             ViewModel = new MainViewModel(_mappingService);
@@ -185,10 +185,10 @@ namespace UAV_Assistive_Operation
         {
             if (!_startedConfiguration)
             {
-                _remapInputService.InputDetected += InputDetected;
+                _inputRegistrationService.InputDetected += InputDetected;
                 _startedConfiguration = true;
             }
-            _remapInputService.Start();
+            _inputRegistrationService.Start();
         }
 
         /// <summary>
@@ -232,8 +232,8 @@ namespace UAV_Assistive_Operation
 
             try
             {
-                _remapInputService.Stop();
-                _remapInputService.InputDetected -= InputDetected;
+                _inputRegistrationService.Stop();
+                _inputRegistrationService.InputDetected -= InputDetected;
                 _startedConfiguration = false;
 
                 _processingService.Start();
