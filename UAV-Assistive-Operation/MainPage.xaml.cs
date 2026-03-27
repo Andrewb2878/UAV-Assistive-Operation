@@ -21,7 +21,7 @@ namespace UAV_Assistive_Operation
         private readonly MapService _mapService;
         private readonly ControllerMappingService _mappingService;
         private readonly ControllerInputRegistrationService _remapInputService;
-        private readonly ControllerProcessingService _processingService;
+        private readonly ControllerInputProcessingService _processingService;
 
         //State
         private bool _mapServiceAvailable = false;
@@ -56,7 +56,7 @@ namespace UAV_Assistive_Operation
             DataContext = ViewModel;
             ViewModel.Menu.PropertyChanged += Menu_PropertyChanged;
 
-            _processingService = new ControllerProcessingService(_mappingService, App.DJIFlightControllerService,
+            _processingService = new ControllerInputProcessingService(_mappingService, App.DJIFlightControllerService,
                 ViewModel.FlightCommand, ViewModel.Menu, ViewModel.SimulatorWarning);
             _mapService = new MapService(MapView);
             _popupService = new UIPopupService();

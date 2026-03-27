@@ -12,7 +12,7 @@ namespace UAV_Assistive_Operation.Services
     /// Converts controller inputs into application controls, handles flight commands, 
     /// process virtual joystick inputs and changes behaviour based on the InputMode
     /// </summary>
-    public class ControllerProcessingService
+    public class ControllerInputProcessingService
     {
         //Services
         private readonly ControllerMappingService _mappingService;
@@ -35,7 +35,7 @@ namespace UAV_Assistive_Operation.Services
         /// <summary>
         /// Subscribes to all required services and view models
         /// </summary>
-        public ControllerProcessingService(ControllerMappingService mappingService, 
+        public ControllerInputProcessingService(ControllerMappingService mappingService, 
             DJIFlightControllerService flightControllerService, FlightCommandViewModel flightCommand, MenuViewModel menuViewModel,
             SimulatorWarningViewModel simulatorWarningViewModel)
         {
