@@ -147,6 +147,8 @@ namespace UAV_Assistive_Operation.Services
 
             EventLogService.Instance.Log(LogEventType.Error,
                 "Aircraft Configuration failed: reconnect the aircraft and try again");
+            // Safety check ensuring that the UAV isn't left hovering if configuration failure due to control lockout.
+            // It should be impossible for the UAV to become airborne prior to configuration, this acts as a failsafe
             if (!_isConfigured && _flightDataService.IsFlying)
             {
                 _ = _flightController.StartAutoLandingAsync();
