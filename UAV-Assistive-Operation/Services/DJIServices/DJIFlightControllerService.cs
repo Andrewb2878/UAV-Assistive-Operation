@@ -181,7 +181,7 @@ namespace UAV_Assistive_Operation.Services
                     await assistant.SetVisionAssistedPositioningEnabledAsync(new BoolMsg { value = true });
                     return true;
                 }
-                    return false;
+                return false;
             }
             catch (Exception error)
             {
