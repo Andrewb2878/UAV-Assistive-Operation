@@ -140,6 +140,7 @@ namespace UAV_Assistive_Operation.Services
         private void AircraftConnected() 
         {
             EvaluateFlightStatus();
+            EvaluateBatteryStatus();
         }
 
         private void AircraftDisconnected()

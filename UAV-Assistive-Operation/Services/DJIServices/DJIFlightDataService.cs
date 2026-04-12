@@ -59,6 +59,7 @@ namespace UAV_Assistive_Operation.Services
             if (_flightControllerHandler != null)
             {
                 InitAircraftFlyingChanged();
+                //InitSimulatorStarted();
 
                 _flightControllerHandler.AircraftLocationChanged += AircraftLocationChanged;
                 _flightControllerHandler.AttitudeChanged += AircraftAttitudeChanged;
@@ -124,6 +125,16 @@ namespace UAV_Assistive_Operation.Services
                 IsFlying = flying.value.Value.value;
                 FlyingChanged?.Invoke(IsFlying);
             }    
+        }
+
+        private async void InitSimulatorStarted()
+        {
+            var simulatorStarted = await _flightControllerHandler.GetIsSimulatorStartedAsync();
+            if (simulatorStarted.value != null)
+            {
+                IsSimulatorStarted = simulatorStarted.value.Value.value;
+                SimulatorStartedChanged?.Invoke(IsSimulatorStarted);
+            }
         }
 
 

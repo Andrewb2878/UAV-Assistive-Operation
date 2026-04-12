@@ -24,6 +24,7 @@ namespace UAV_Assistive_Operation.Services
 
         public void AircraftDisconnected()
         {
+            _ = StopSimulatorAsync();
             _flightControllerHandler = null;
         }
 
@@ -90,9 +91,11 @@ namespace UAV_Assistive_Operation.Services
             if (message != null)
             {
                 EventLogService.Instance.Log(LogEventType.Warning, $"Simulator failed{message}");
-                return;
             }
-            EventLogService.Instance.Log(LogEventType.System, "Simulator stopped");
+            else
+            {
+                EventLogService.Instance.Log(LogEventType.System, "Simulator stopped");
+            }
             _simulatorSettings = null;
             SimulatorStateChanged?.Invoke(false);
         }

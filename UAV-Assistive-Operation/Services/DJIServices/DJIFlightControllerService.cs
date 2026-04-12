@@ -37,8 +37,8 @@ namespace UAV_Assistive_Operation.Services
 
         //state tracking to manage the stop command
         private bool _stopModeActive;
-        private const float BrakingGain = 0.2f;
-        private const double StopThreshold = 0.2;
+        private const float BrakingGain = 0.9f;
+        private const double StopThreshold = 0.05;
         private const int BrakingUpdateFrequency = 80;
 
 
@@ -338,15 +338,18 @@ namespace UAV_Assistive_Operation.Services
             {
                 var velocityData = _telemetryService.Speed;
 
-                if (!velocityData.VelocityX.HasValue || !velocityData.VelocityY.HasValue || !velocityData.Horizontal.HasValue)
+                // Preventing breaking loop from activating
+                /*if (!velocityData.VelocityX.HasValue || !velocityData.VelocityY.HasValue || !velocityData.Horizontal.HasValue)
                 {
                     await Task.Delay(BrakingUpdateFrequency);
                     continue;
-                }
+                }*/
+                await Task.Delay(BrakingUpdateFrequency);
 
                 //Checking if the aircraft has stopped
                 if (velocityData.Horizontal.Value < StopThreshold)
                 {
+                    EventLogService.Instance.Log(LogEventType.Debug, "Stop threshold reached");
                     break;
                 }
 
